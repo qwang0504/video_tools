@@ -3,15 +3,13 @@ from numpy.typing import NDArray
 from scipy import stats
 from typing import Protocol, Tuple, Optional
 from collections import deque
-from image.imconvert import im2gray, im2single
+from image_tools import im2gray, im2single
 from multiprocessing import Process, Event, Pool, cpu_count
 from multiprocessing.sharedctypes import RawArray, Value
 import ctypes
 from tqdm import tqdm
 import cv2
 from abc import ABC, abstractmethod
-from functools import partial
-
 
 def my_mode(x: NDArray) -> NDArray:
     return stats.mode(x, axis=2, keepdims=False).mode

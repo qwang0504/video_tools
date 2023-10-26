@@ -1,0 +1,3 @@
+[submodule "image_tools"]
+	path = image_tools
+	url = git@github.com:ElTinmar/image_tools.git
