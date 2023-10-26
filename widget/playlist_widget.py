@@ -1,7 +1,7 @@
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtWidgets import QSpinBox, QSlider, QListWidgetItem, QListWidget, QFileDialog, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QWidget
-from video_tools import OpenCV_VideoReader
-from qt_widgets import NDarray_to_QPixmap,  LabeledSliderSpinBox, LabeledSpinBox
+from .. import OpenCV_VideoReader
+from ..qt_widgets import NDarray_to_QPixmap,  LabeledSliderSpinBox, LabeledSpinBox
 import cv2
 
 class PlaylistWidget(QWidget):
