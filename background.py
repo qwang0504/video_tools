@@ -54,7 +54,7 @@ class BackgroundSubtractor(ABC):
     def is_initialized(self):
         return self.initialized
     
-class VideoReader(Protocol):
+class VideoSource(Protocol):
     def next_frame(self) -> Tuple[bool,NDArray]:
         """return the next frame in the movie, 
         and a boolean if the operation succeeded"""
@@ -117,7 +117,7 @@ class StaticBackground(BackgroundSubtractor):
     '''
     def __init__(
             self,
-            video_reader: VideoReader, 
+            video_reader: VideoSource, 
             num_sample_frames: int = 500
         ) -> None:
         super().__init__()
