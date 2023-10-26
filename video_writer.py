@@ -3,6 +3,8 @@ from numpy.typing import NDArray
 import subprocess
 import numpy as np
 
+# TODO maybe add a multiprocessing queue
+
 # video writer opencv
 class OpenCV_VideoWriter:
 
