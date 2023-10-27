@@ -10,6 +10,8 @@ import ctypes
 from tqdm import tqdm
 import cv2
 from abc import ABC, abstractmethod
+from enum import Enum
+
 
 def my_mode(x: NDArray) -> NDArray:
     return stats.mode(x, axis=2, keepdims=False).mode
@@ -33,11 +35,17 @@ def mode(arr: NDArray, num_processes: int = cpu_count()):
 
     return out
 
+class Polarity(Enum):
+    DARK_ON_BRIGHT = -1,
+    BRIGHT_ON_DARK = 1,   
 class BackgroundSubtractor(ABC):
 
-    def __init__(self) -> None:
+
+
+    def __init__(self, polarity: Polarity = Polarity.BRIGHT_ON_DARK) -> None:
         super().__init__()
         self.initialized = False
+        self.polarity = polarity
     
     @abstractmethod
     def initialize(self) -> None:
@@ -52,7 +60,11 @@ class BackgroundSubtractor(ABC):
         pass
 
     def is_initialized(self):
-        return self.initialized
+        return self.initialized   
+    
+    def set_polarity(self, polarity: Polarity) -> None:
+        self.polarity = polarity
+
     
 class VideoSource(Protocol):
     def next_frame(self) -> Tuple[bool,NDArray]:
@@ -108,7 +120,7 @@ class BackroundImage(BackgroundSubtractor):
             return None
 
     def subtract_background(self, image: NDArray) -> NDArray:
-        return image - self.background
+        return self.polarity*(image - self.background)
 
 class StaticBackground(BackgroundSubtractor):
     '''
@@ -171,7 +183,7 @@ class StaticBackground(BackgroundSubtractor):
             return None
 
     def subtract_background(self, image: NDArray) -> NDArray:
-        return image - self.background 
+        return self.polarity*(image - self.background)
 
 class DynamicBackground(BackgroundSubtractor):
     '''
@@ -202,7 +214,7 @@ class DynamicBackground(BackgroundSubtractor):
             self.frame_collection.append(image)
             self.compute_background()
         self.curr_image = self.curr_image + 1
-        return image - self.background
+        return self.polarity*(image - self.background)
     
     def initialize(self) -> None:
         self.initialized = True
@@ -300,7 +312,7 @@ class DynamicBackgroundMP(BackgroundSubtractor):
                 self.background[:] = image.flatten()
         self.counter = self.counter + 1
         bckg = self.get_background()
-        return image - bckg
+        return self.polarity*(image - bckg)
 
     def initialize(self) -> None:
         self.start()

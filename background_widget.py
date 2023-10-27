@@ -10,7 +10,7 @@ import os
 import cv2
 import numpy as np
 
-# TODO show image of background
+# TODO add polarity checkbox  
 # TODO add widget to save static background as an image
 
 class BackgroundSubtractorWidget(QWidget):
