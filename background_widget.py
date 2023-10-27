@@ -9,8 +9,7 @@ import os
 import cv2
 import numpy as np
 
-# TODO add polarity checkbox  
-# TODO add widget to save static background as an image
+# TODO add the possibility to supply a video reader
 
 class BackgroundSubtractorWidget(QWidget):
     
