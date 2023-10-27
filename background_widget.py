@@ -1,11 +1,10 @@
 # widget to specify a background subtraction method
 
-from PyQt5.QtCore import QTimer, Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QPushButton, QLineEdit, QComboBox, QStackedWidget, QLabel, QVBoxLayout, QHBoxLayout, QWidget
+from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QPushButton, QCheckBox, QComboBox, QStackedWidget, QLabel, QVBoxLayout, QWidget
 from .video_reader import OpenCV_VideoReader
-from .background import BackgroundSubtractor, NoBackgroundSub, BackroundImage, StaticBackground, DynamicBackground, DynamicBackgroundMP
-from .qt_widgets import LabeledSpinBox, FileOpenLabeledEditButton, NDarray_to_QPixmap
+from .background import BackgroundSubtractor, NoBackgroundSub, BackroundImage, StaticBackground, DynamicBackground, DynamicBackgroundMP, Polarity
+from .qt_widgets import LabeledSpinBox, FileOpenLabeledEditButton, LabeledComboBox, NDarray_to_QPixmap
 import os
 import cv2
 import numpy as np
@@ -84,7 +83,8 @@ class BackgroundSubtractorWidget(QWidget):
         self.dynamic_mp_height.valueChanged.connect(self.update_background_subtractor)
         
         # drop-down list to choose the background subtraction method
-        self.bckgsub_method_combobox = QComboBox(self)
+        self.bckgsub_method_combobox = LabeledComboBox(self)
+        self.bckgsub_method_combobox.setText('method')
         self.bckgsub_method_combobox.addItem('none')
         self.bckgsub_method_combobox.addItem('image')
         self.bckgsub_method_combobox.addItem('static')
@@ -94,6 +94,12 @@ class BackgroundSubtractorWidget(QWidget):
 
         self.init_button = QPushButton('initialize', self)
         self.init_button.clicked.connect(self.initialize_background_subtractor)
+
+        self.bckgsub_polarity_combobox = LabeledComboBox(self)
+        self.bckgsub_polarity_combobox.setText('polarity')
+        self.bckgsub_polarity_combobox.addItem('dark on bright')
+        self.bckgsub_polarity_combobox.addItem('bright on dark')
+        self.bckgsub_polarity_combobox.currentIndexChanged.connect(self.on_polarity_change)
 
         self.bckgsub_parameter_stack = QStackedWidget(self)
         self.bckgsub_parameter_stack.addWidget(self.parameters_none)
@@ -113,6 +119,7 @@ class BackgroundSubtractorWidget(QWidget):
     def layout_components(self):
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(self.bckgsub_method_combobox)
+        main_layout.addWidget(self.bckgsub_polarity_combobox)
         main_layout.addWidget(self.bckgsub_parameter_stack)
         main_layout.addWidget(self.init_button)
         main_layout.addWidget(self.zoom)
@@ -142,17 +149,30 @@ class BackgroundSubtractorWidget(QWidget):
         self.bckgsub_parameter_stack.setCurrentIndex(index)
         self.update_background_subtractor()
 
+    def on_polarity_change(self, index):
+        if self.background_subtractor is not None:
+            if index ==0:
+                self.background_subtractor.set_polarity(Polarity.DARK_ON_BRIGHT)
+            else:
+                self.background_subtractor.set_polarity(Polarity.BRIGHT_ON_DARK)
+
     def update_background_subtractor(self):
         method = self.bckgsub_method_combobox.currentIndex()
+
+        if self.bckgsub_polarity_combobox.currentIndex() == 0:
+            polarity = Polarity.DARK_ON_BRIGHT
+        else:
+            polarity = Polarity.BRIGHT_ON_DARK
         
         if method == 0:
-            self.background_subtractor = NoBackgroundSub()
+            self.background_subtractor = NoBackgroundSub(polarity = polarity)
 
         if method == 1:
             filepath = self.image_filename.text()
             if os.path.exists(filepath):
                 self.background_subtractor = BackroundImage(
-                    image_file_name = filepath
+                    image_file_name = filepath,
+                    polarity = polarity
                 )
         
         if method == 2:
@@ -162,13 +182,15 @@ class BackgroundSubtractorWidget(QWidget):
                 video_reader.open_file(filepath)
                 self.background_subtractor = StaticBackground(
                     video_reader = video_reader,
-                    num_sample_frames = self.static_numsamples.value()
+                    num_sample_frames = self.static_numsamples.value(),
+                    polarity = polarity
                 )
             
         if method == 3:
             self.background_subtractor = DynamicBackground(
                 num_sample_frames = self.dynamic_numsamples.value(),
-                sample_every_n_frames = self.dynamic_samplefreq.value()
+                sample_every_n_frames = self.dynamic_samplefreq.value(),
+                polarity = polarity
             )
 
         if method == 4:
@@ -176,7 +198,8 @@ class BackgroundSubtractorWidget(QWidget):
                 num_images = self.dynamic_mp_numsamples.value(),
                 every_n_image = self.dynamic_mp_samplefreq.value(),
                 width = self.dynamic_mp_width.value(),
-                height = self.dynamic_mp_height.value()
+                height = self.dynamic_mp_height.value(),
+                polarity = polarity
             )
 
     def initialize_background_subtractor(self):
