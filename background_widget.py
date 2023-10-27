@@ -1,10 +1,10 @@
 # widget to specify a background subtraction method
 
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QPushButton, QCheckBox, QComboBox, QStackedWidget, QLabel, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QPushButton, QStackedWidget, QLabel, QVBoxLayout, QWidget
 from .video_reader import OpenCV_VideoReader
 from .background import BackgroundSubtractor, NoBackgroundSub, BackroundImage, StaticBackground, DynamicBackground, DynamicBackgroundMP, Polarity
-from .qt_widgets import LabeledSpinBox, FileOpenLabeledEditButton, LabeledComboBox, NDarray_to_QPixmap
+from .qt_widgets import LabeledSpinBox, FileSaveLabeledEditButton, FileOpenLabeledEditButton, LabeledComboBox, NDarray_to_QPixmap
 import os
 import cv2
 import numpy as np
@@ -108,6 +108,9 @@ class BackgroundSubtractorWidget(QWidget):
         self.bckgsub_parameter_stack.addWidget(self.parameters_dynamic)
         self.bckgsub_parameter_stack.addWidget(self.parameters_dynamic_mp)
 
+        self.save_filename = FileSaveLabeledEditButton()
+        self.save_filename.textChanged.connect(self.save_background_image)
+
         self.zoom = LabeledSpinBox(self)
         self.zoom.setText('zoom (%)')
         self.zoom.setRange(25,500)
@@ -124,6 +127,7 @@ class BackgroundSubtractorWidget(QWidget):
         main_layout.addWidget(self.init_button)
         main_layout.addWidget(self.zoom)
         main_layout.addWidget(self.background_image)
+        main_layout.addWidget(self.save_filename)
 
         image_layout = QVBoxLayout(self.parameters_image)
         image_layout.addWidget(self.image_filename)
@@ -201,6 +205,13 @@ class BackgroundSubtractorWidget(QWidget):
                 height = self.dynamic_mp_height.value(),
                 polarity = polarity
             )
+
+    def save_background_image(self, filename):
+        if self.background_subtractor is not None:
+            bckg_image = self.background_subtractor.get_background_image()
+            if bckg_image is not None:
+                bckg_image = (255*bckg_image).astype(np.uint8)
+                cv2.imwrite(filename, bckg_image)
 
     def initialize_background_subtractor(self):
         # TODO launch this in a separate thread/process otherwise the GUI becomes 
