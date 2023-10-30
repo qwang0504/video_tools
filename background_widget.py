@@ -1,6 +1,6 @@
 # widget to specify a background subtraction method
 
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, pyqtSignal
 from PyQt5.QtWidgets import QPushButton, QStackedWidget, QLabel, QVBoxLayout, QWidget
 from .video_reader import OpenCV_VideoReader
 from .background import BackgroundSubtractor, NoBackgroundSub, BackroundImage, StaticBackground, DynamicBackground, DynamicBackgroundMP, Polarity
@@ -8,10 +8,13 @@ from .qt_widgets import LabeledSpinBox, FileSaveLabeledEditButton, FileOpenLabel
 import os
 import cv2
 import numpy as np
+from numpy.typing import NDArray
 
 # TODO add the possibility to supply a video reader
 
 class BackgroundSubtractorWidget(QWidget):
+
+    background_initialized = pyqtSignal(int,int,bytes)
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -221,6 +224,8 @@ class BackgroundSubtractorWidget(QWidget):
         # TODO launch this in a separate thread/process otherwise the GUI becomes 
         # unresponsive
         self.background_subtractor.initialize()
+        img = self.background_subtractor.get_background_image()
+        self.background_initialized.emit(img.shape[0], img.shape[1], img.tobytes())
 
     def get_background_subtractor(self):
         return self.background_subtractor
