@@ -1,10 +1,12 @@
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtCore import QTimer, Qt, pyqtSignal
 from PyQt5.QtWidgets import QSpinBox, QSlider, QListWidgetItem, QListWidget, QFileDialog, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QWidget
 from .video_reader import OpenCV_VideoReader
 from .qt_widgets import NDarray_to_QPixmap,  LabeledSliderSpinBox, LabeledSpinBox
 import cv2
 
 class PlaylistWidget(QWidget):
+
+    video_selected_signal = pyqtSignal(str)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -193,6 +195,8 @@ class PlaylistWidget(QWidget):
             self.bottom.setValue(0)
             self.width.setValue(height_max)
             self.height.setValue(width_max)
+
+            self.video_selected_signal.emit(filename)
 
     def previous_video(self):
         num_item = self.video_list.count()

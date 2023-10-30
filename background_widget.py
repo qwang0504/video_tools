@@ -16,6 +16,7 @@ class BackgroundSubtractorWidget(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.background_subtractor = None
+        self.video_file = None
         self.declare_components()
         self.layout_components()
         self.update_background_subtractor()
@@ -158,6 +159,10 @@ class BackgroundSubtractorWidget(QWidget):
                 self.background_subtractor.set_polarity(Polarity.DARK_ON_BRIGHT)
             else:
                 self.background_subtractor.set_polarity(Polarity.BRIGHT_ON_DARK)
+
+    def set_video_file(self, filename: str) -> None:
+        self.video_file = filename
+        self.static_filename.setEditField(filename)
 
     def update_background_subtractor(self):
         method = self.bckgsub_method_combobox.currentIndex()
