@@ -5,7 +5,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMainWindow, QFileDialog, QPushButton, QLineEdit, QComboBox, QStackedWidget, QLabel, QVBoxLayout, QHBoxLayout, QWidget
 from .video_reader import OpenCV_VideoReader
 from .background import BackgroundSubtractor, NoBackgroundSub, BackroundImage, StaticBackground, DynamicBackground, DynamicBackgroundMP
-from .qt_widgets import LabeledSpinBox, FileOpenLabeledEditButton, NDarray_to_QPixmap
+from qt_widgets import LabeledSpinBox, FileOpenLabeledEditButton, NDarray_to_QPixmap
 import os
 import cv2
 import numpy as np

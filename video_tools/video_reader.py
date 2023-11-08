@@ -2,7 +2,6 @@ import cv2
 from numpy.typing import NDArray
 import numpy as np
 from typing import Tuple, Optional
-import queue
 from multiprocessing import Queue, Process, Event 
 
 # TODO: add resizing as an option 
