@@ -13,8 +13,8 @@ setup(
         "scipy",
         "PyQt5",
         "opencv-python",
-        "qt_widgets",
-        "image_tools",
+        "qt_widgets @ git+https://github.com/ElTinmar/qt_widgets.git@main",
+        "image_tools @ git+https://github.com/ElTinmar/image_tools.git@main",
         "tqdm"
     ]
 )
