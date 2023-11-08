@@ -40,8 +40,6 @@ class Polarity(Enum):
     BRIGHT_ON_DARK = 1,   
 class BackgroundSubtractor(ABC):
 
-
-
     def __init__(self, polarity: Polarity = Polarity.BRIGHT_ON_DARK) -> None:
         super().__init__()
         self.initialized = False
@@ -103,8 +101,8 @@ class NoBackgroundSub(BackgroundSubtractor):
         return image 
 
 class BackroundImage(BackgroundSubtractor):
-    def __init__(self, image_file_name) -> None:
-        super().__init__()
+    def __init__(self, image_file_name, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.image_file_name = image_file_name
         self.background = None
 
@@ -120,7 +118,7 @@ class BackroundImage(BackgroundSubtractor):
             return None
 
     def subtract_background(self, image: NDArray) -> NDArray:
-        return self.polarity*(image - self.background)
+        return self.polarity.value*(image - self.background)
 
 class StaticBackground(BackgroundSubtractor):
     '''
@@ -130,9 +128,10 @@ class StaticBackground(BackgroundSubtractor):
     def __init__(
             self,
             video_reader: VideoSource, 
-            num_sample_frames: int = 500
+            num_sample_frames: int = 500,
+            *args, **kwargs
         ) -> None:
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.video_reader = video_reader
         self.num_sample_frames = num_sample_frames
         self.background = None
@@ -183,7 +182,7 @@ class StaticBackground(BackgroundSubtractor):
             return None
 
     def subtract_background(self, image: NDArray) -> NDArray:
-        return self.polarity*(image - self.background)
+        return self.polarity.value*(image - self.background)
 
 class DynamicBackground(BackgroundSubtractor):
     '''
@@ -195,10 +194,11 @@ class DynamicBackground(BackgroundSubtractor):
     def __init__(
         self, 
         num_sample_frames: int, 
-        sample_every_n_frames: int
+        sample_every_n_frames: int,
+        *args, **kwargs
         ) -> None:
 
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.num_sample_frames = num_sample_frames
         self.sample_every_n_frames = sample_every_n_frames
         self.frame_collection = deque(maxlen=num_sample_frames)
@@ -214,7 +214,7 @@ class DynamicBackground(BackgroundSubtractor):
             self.frame_collection.append(image)
             self.compute_background()
         self.curr_image = self.curr_image + 1
-        return self.polarity*(image - self.background)
+        return self.polarity.value*(image - self.background)
     
     def initialize(self) -> None:
         self.initialized = True
@@ -261,9 +261,10 @@ class DynamicBackgroundMP(BackgroundSubtractor):
         height,
         num_images = 500, 
         every_n_image = 100,
+        *args, **kwargs
     ) -> None:
 
-        super().__init__()
+        super().__init__(*args, **kwargs)
         
         self.width = width
         self.height = height
@@ -312,7 +313,7 @@ class DynamicBackgroundMP(BackgroundSubtractor):
                 self.background[:] = image.flatten()
         self.counter = self.counter + 1
         bckg = self.get_background()
-        return self.polarity*(image - bckg)
+        return self.polarity.value*(image - bckg)
 
     def initialize(self) -> None:
         self.start()
