@@ -193,8 +193,8 @@ class PlaylistWidget(QWidget):
             self.rescale.setValue(100)
             self.left.setValue(0)
             self.bottom.setValue(0)
-            self.width.setValue(height_max)
-            self.height.setValue(width_max)
+            self.width.setValue(width_max)
+            self.height.setValue(height_max)
 
             self.video_selected_signal.emit(filename)
 
