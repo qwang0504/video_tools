@@ -7,6 +7,9 @@ import numpy as np
 
 # video writer opencv
 class OpenCV_VideoWriter:
+    '''
+    Expects grayscale images
+    '''
 
     def __init__(
             self, 
@@ -22,7 +25,7 @@ class OpenCV_VideoWriter:
         self.fps = fps
         self.filename = filename
         self.fourcc = cv2.VideoWriter_fourcc(*fourcc)
-        self.writer = cv2.VideoWriter(filename, self.fourcc, fps, (height, width))
+        self.writer = cv2.VideoWriter(filename, self.fourcc, fps, (height, width), False)
 
     def write_frame(self, image: NDArray) -> None:
         # TODO maybe check image dimensions and grayscale
