@@ -39,6 +39,9 @@ class Polarity(Enum):
     DARK_ON_BRIGHT = -1,
     BRIGHT_ON_DARK = 1,   
 
+    # this is useful for argparse
+    def __str__(self):
+        return self.value
 
 class BackgroundSubtractor(ABC):
 
