@@ -38,6 +38,8 @@ def mode(arr: NDArray, num_processes: int = cpu_count()):
 class Polarity(Enum):
     DARK_ON_BRIGHT = -1,
     BRIGHT_ON_DARK = 1,   
+
+
 class BackgroundSubtractor(ABC):
 
     def __init__(self, polarity: Polarity = Polarity.BRIGHT_ON_DARK) -> None:
@@ -89,7 +91,8 @@ class VideoSource(Protocol):
 
     def reset_reader(self) -> None:
         """reset reader to video beginning"""
-        
+
+
 class NoBackgroundSub(BackgroundSubtractor):
     def initialize(self):
         self.initialized = True
@@ -99,6 +102,7 @@ class NoBackgroundSub(BackgroundSubtractor):
 
     def subtract_background(self, image: NDArray) -> NDArray:
         return image 
+
 
 class BackroundImage(BackgroundSubtractor):
     def __init__(self, image_file_name, *args, **kwargs) -> None:
@@ -119,6 +123,7 @@ class BackroundImage(BackgroundSubtractor):
 
     def subtract_background(self, image: NDArray) -> NDArray:
         return self.polarity.value*(image - self.background)
+
 
 class StaticBackground(BackgroundSubtractor):
     '''
@@ -184,6 +189,7 @@ class StaticBackground(BackgroundSubtractor):
     def subtract_background(self, image: NDArray) -> NDArray:
         return self.polarity.value*(image - self.background)
 
+
 class DynamicBackground(BackgroundSubtractor):
     '''
     Use this if you want to extract background from a streaming source 
@@ -225,6 +231,7 @@ class DynamicBackground(BackgroundSubtractor):
         else:
             return None
 
+
 class BoundedQueue:
     def __init__(self, size, maxlen):
         self.size = size
@@ -247,6 +254,7 @@ class BoundedQueue:
         else:
             data_np = np.frombuffer(self.data, dtype=np.float32).reshape((self.maxlen, *self.size))
             return data_np[0:self.numel.value,:,:]
+
 
 class DynamicBackgroundMP(BackgroundSubtractor):
     '''
