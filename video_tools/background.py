@@ -41,7 +41,7 @@ class Polarity(Enum):
 
     # this is useful for argparse
     def __str__(self):
-        return self.value
+        return self.name
 
 class BackgroundSubtractor(ABC):
 
