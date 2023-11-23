@@ -25,7 +25,7 @@ class OpenCV_VideoWriter:
         self.fps = fps
         self.filename = filename
         self.fourcc = cv2.VideoWriter_fourcc(*fourcc)
-        self.writer = cv2.VideoWriter(filename, self.fourcc, fps, (height, width), False)
+        self.writer = cv2.VideoWriter(filename, self.fourcc, fps, (width, height), False)
 
     def write_frame(self, image: NDArray) -> None:
         # TODO maybe check image dimensions and grayscale
