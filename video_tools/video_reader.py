@@ -25,6 +25,7 @@ class OpenCV_VideoReader:
         self._number_of_frames = 0
         self._width = 0
         self._height = 0
+        self._fps = 0
         self._num_channels = 0
         self._safe = safe
         self._crop = crop # [left,bottom,width,height]
@@ -48,6 +49,8 @@ class OpenCV_VideoReader:
             # Trust opencv to return video properties. This is fast but there are known issues 
             # with this. Use at your own risk.
             self._number_of_frames = int(self._capture.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        self._fps = self._capture.get(cv2.CAP_PROP_FPS)
 
         # get video properties from first frame
         rval, frame = self._capture.read()
@@ -186,7 +189,10 @@ class OpenCV_VideoReader:
 
     def get_height_max(self) -> int:
         return int(self._capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        
+    
+    def get_fps(self) -> float:
+        return self._fps
+    
     def get_width(self) -> int:
         return self._width
     
@@ -227,6 +233,7 @@ class Buffered_OpenCV_VideoReader(Process):
         self._number_of_frames = 0
         self._width = 0
         self._height = 0
+        self._fps = 0
         self._num_channels = 0
         self._safe = safe
         self._crop = crop # [left,bottom,width,height]
@@ -251,6 +258,8 @@ class Buffered_OpenCV_VideoReader(Process):
             # Trust opencv to return video properties. This is fast but there are known issues 
             # with this. Use at your own risk.
             self._number_of_frames = int(self._capture.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        self._fps = self._capture.get(cv2.CAP_PROP_FPS)
 
         # get video properties from first frame
         rval, frame = self._capture.read()
@@ -307,7 +316,10 @@ class Buffered_OpenCV_VideoReader(Process):
     
     def get_height(self) -> int:
         return self._height
-    
+
+    def get_fps(self) -> float:
+        return self._fps
+        
     def get_num_channels(self) -> int:
         return self._num_channels
     
