@@ -285,7 +285,7 @@ class DynamicBackgroundMP(BackgroundSubtractor):
         
         self.stop_flag = Event()
         self.background = RawArray(ctypes.c_float, width*height)
-        self.image_store = BoundedQueue((width,height),maxlen=num_images)
+        self.image_store = BoundedQueue((height,width),maxlen=num_images)
 
     def start(self):
         self.proc_compute = Process(
