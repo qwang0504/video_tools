@@ -312,7 +312,7 @@ class DynamicBackgroundMP(BackgroundSubtractor):
                 background[:] = bckg_img.flatten()
 
     def get_background(self) -> NDArray:
-        return np.frombuffer(self.background, dtype=np.float32).reshape((self.width,self.height))
+        return np.frombuffer(self.background, dtype=np.float32).reshape((self.height,self.width))
     
     def subtract_background(self, image : NDArray) -> NDArray:
         """
