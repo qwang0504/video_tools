@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 class VideoDisplay(Process):
     def __init__(
             self, 
-            queue: Queue = Queue(), # TODO this is dangerous, multiple instances created without queue qrgument will share the same queue
+            queue: Queue,
             fps: int = 30,
             winname: str = 'display',
             *args,
@@ -38,8 +38,8 @@ class VideoDisplay(Process):
                 break
             timestamp = time.time_ns()
             fps_hat = 1/((timestamp - last_disp_time)*1e-9)
-            frame = cv2.putText(frame,f'{fps_hat:.2f}',(20,20),cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,255))
             cv2.imshow(self.winname, frame)
+            cv2.displayStatusBar(self.winname,f'Display FPS: {fps_hat:.2f}',1)
             cv2.waitKey(1)
             last_disp_time = time.time_ns()
         cv2.destroyWindow(self.winname)
