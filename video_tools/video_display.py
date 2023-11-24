@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 class VideoDisplay(Process):
     def __init__(
             self, 
-            queue: Queue = Queue(),
+            queue: Queue = Queue(), # TODO this is dangerous, multiple instances created without queue qrgument will share the same queue
             fps: int = 30,
             winname: str = 'display',
             *args,
