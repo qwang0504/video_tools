@@ -115,6 +115,7 @@ class BackgroundSubtractorWidget(QWidget):
         self.bckgsub_parameter_stack.addWidget(self.parameters_dynamic_mp)
 
         self.save_filename = FileSaveLabeledEditButton()
+        self.save_filename.setText('Save background image:')
         self.save_filename.textChanged.connect(self.save_background_image)
 
         self.zoom = LabeledSpinBox(self)
