@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='video_tools',
     author='Martin Privat',
-    version='0.1.13',
+    version='0.1.14',
     packages=['video_tools','video_tools.tests'],
     license='Creative Commons Attribution-Noncommercial-Share Alike license',
     description='simple video reader, writer, and processing functions',
