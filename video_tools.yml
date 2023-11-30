@@ -1,0 +1,15 @@
+name: video_tools
+channels:
+- conda-forge
+dependencies:
+- python == 3.8.16
+- ipython
+- pyqt5
+- numpy
+- opencv
+- scipy
+- tqdm
+- pip
+- pip:
+  - git+https://github.com/ElTinmar/qt_widgets.git@main
+  - git+https://github.com/ElTinmar/image_tools.git@main
