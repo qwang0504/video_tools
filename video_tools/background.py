@@ -125,7 +125,7 @@ class BackroundImage(BackgroundSubtractor):
             return None
 
     def subtract_background(self, image: NDArray) -> NDArray:
-        return np.clip(self.polarity.value*(image - self.background), 0, 1)
+        return np.maximum(0, self.polarity.value*(image - self.background))
 
 
 class StaticBackground(BackgroundSubtractor):
@@ -190,7 +190,7 @@ class StaticBackground(BackgroundSubtractor):
             return None
 
     def subtract_background(self, image: NDArray) -> NDArray:
-        return np.clip(self.polarity.value*(image - self.background), 0, 1)
+        return np.maximum(0, self.polarity.value*(image - self.background))
 
 
 class DynamicBackground(BackgroundSubtractor):
@@ -223,7 +223,7 @@ class DynamicBackground(BackgroundSubtractor):
             self.frame_collection.append(image)
             self.compute_background()
         self.curr_image = self.curr_image + 1
-        return np.clip(self.polarity.value*(image - self.background), 0, 1)
+        return np.maximum(0, self.polarity.value*(image - self.background))
     
     def initialize(self) -> None:
         self.initialized = True
@@ -324,7 +324,7 @@ class DynamicBackgroundMP(BackgroundSubtractor):
                 self.background[:] = image.flatten()
         self.counter = self.counter + 1
         bckg = self.get_background()
-        return np.clip(self.polarity.value*(image - bckg), 0, 1)
+        return np.maximum(0, self.polarity.value*(image - bckg))
 
     def initialize(self) -> None:
         self.start()
