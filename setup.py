@@ -2,6 +2,7 @@ from distutils.core import setup
 
 setup(
     name='video_tools',
+    python_requires='==3.10',
     author='Martin Privat',
     version='0.1.14',
     packages=['video_tools','video_tools.tests'],
@@ -12,7 +13,7 @@ setup(
         "numpy", 
         "scipy",
         "PyQt5",
-        "opencv-contrib-python-rolling @ https://github.com/ElTinmar/build_opencv/raw/main/opencv_contrib_python_rolling-4.8.0.20231210-cp38-cp38-linux_x86_64.whl",
+        "opencv-contrib-python-rolling @ https://github.com/ElTinmar/build_opencv/raw/main/opencv_contrib_python_rolling-4.8.0.20231212-cp310-cp310-linux_x86_64.whl",
         "qt_widgets @ git+https://github.com/ElTinmar/qt_widgets.git@main",
         "image_tools @ git+https://github.com/ElTinmar/image_tools.git@main",
         "tqdm"
