@@ -21,6 +21,7 @@ class OpenCV_VideoReader:
         ) -> None:
             
         self._filename = filename
+        self._backend = backend
         if backend is not None:
             self._capture = cv2.VideoCapture(filename, backend)
         else:
@@ -84,7 +85,10 @@ class OpenCV_VideoReader:
         TODO
         """
         self._capture.release()
-        self._capture = cv2.VideoCapture(self._filename)
+        if self._backend is not None:
+            self._capture = cv2.VideoCapture(self._filename, self._backend)
+        else:
+            self._capture = cv2.VideoCapture(self._filename)
         self._current_frame = 0
 
     def next_frame(self) -> Tuple[bool,NDArray]:
@@ -233,6 +237,7 @@ class Buffered_OpenCV_VideoReader(Process):
         ):
             
         self._filename = filename
+        self._backend = backend
         if backend is not None:
             self._capture = cv2.VideoCapture(filename)
         else:
@@ -289,7 +294,10 @@ class Buffered_OpenCV_VideoReader(Process):
         self._capture.release()
 
     def run(self) -> None:
-        self._capture = cv2.VideoCapture(self._filename)
+        if self._backend is not None:
+            self._capture = cv2.VideoCapture(self._filename)
+        else:
+            self._capture = cv2.VideoCapture(self._filename, self._backend)
         self._current_frame = 0
         while not self._stop.is_set():
             rval, frame = self.read_frame()
