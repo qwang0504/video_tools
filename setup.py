@@ -4,7 +4,7 @@ setup(
     name='video_tools',
     python_requires='>=3.9,<3.10',
     author='Martin Privat',
-    version='0.1.14',
+    version='0.1.15',
     packages=['video_tools','video_tools.tests'],
     license='Creative Commons Attribution-Noncommercial-Share Alike license',
     description='simple video reader, writer, and processing functions',
