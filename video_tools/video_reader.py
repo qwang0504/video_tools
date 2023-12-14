@@ -16,11 +16,15 @@ class OpenCV_VideoReader:
             filename: str, 
             safe: bool = False, 
             crop: Optional[Tuple[int,int,int,int]] = None,
-            resize: Optional[float] = None
+            resize: Optional[float] = None,
+            backend: Optional[int] = None
         ) -> None:
             
         self._filename = filename
-        self._capture = cv2.VideoCapture(filename)
+        if backend is not None:
+            self._capture = cv2.VideoCapture(filename, backend)
+        else:
+            self._capture = cv2.VideoCapture(filename)
         self._current_frame = 0
         self._number_of_frames = 0
         self._width = 0
