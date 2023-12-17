@@ -13,7 +13,7 @@ setup(
         "numpy", 
         "scipy",
         "PyQt5",
-        "opencv-contrib-python",
+        "opencv-python",
         "qt_widgets @ git+https://github.com/ElTinmar/qt_widgets.git@main",
         "image_tools @ git+https://github.com/ElTinmar/image_tools.git@main",
         "tqdm"
