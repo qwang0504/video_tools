@@ -153,9 +153,6 @@ class InpaintBackground(BackgroundSubtractor):
         self.background = cv2.inpaint(img, mask, self.inpaint_radius, self.method)
         self.initialized = True
 
-    def get_mask(self, img):
-        pass
-
     def get_frame(self):
         self.video_reader.seek_to(self.frame_num)
         rval, frame = self.video_reader.next_frame()
