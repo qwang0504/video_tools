@@ -150,6 +150,7 @@ class InpaintBackground(BackgroundSubtractor):
 
         img = self.get_frame()
         mask = polymask(img)
+        print((mask, mask.shape))
         self.background = cv2.inpaint(img, mask, self.inpaint_radius, self.method)
         self.initialized = True
 
