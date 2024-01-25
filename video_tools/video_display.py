@@ -21,6 +21,7 @@ class VideoDisplay(Process):
         self.last_image_time = 0
 
     def queue_image(self, image: NDArray) -> None:
+        '''check fps, discard frames if time not elapsed'''
         t = time.time_ns()
         if ((t - self.last_image_time)*1e-9) >= (1/self.fps):
             self.queue.put(image)
