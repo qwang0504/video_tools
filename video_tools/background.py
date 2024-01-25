@@ -3,7 +3,7 @@ from numpy.typing import NDArray
 from scipy import stats
 from typing import Protocol, Tuple, Optional
 from collections import deque
-from image_tools import im2gray, im2single
+from image_tools import im2gray, im2single, polymask
 from multiprocessing import Process, Event, Pool, cpu_count
 from multiprocessing.sharedctypes import RawArray, Value
 import ctypes
@@ -118,6 +118,53 @@ class BackroundImage(BackgroundSubtractor):
         self.background = im2single(im2gray(image)) 
         self.initialized = True
     
+    def get_background_image(self) -> Optional[NDArray]:
+        if self.initialized:
+            return self.background
+        else:
+            return None
+
+    def subtract_background(self, image: NDArray) -> NDArray:
+        return np.maximum(0, self.polarity.value*(image - self.background))
+
+class BackgroundInpaint(BackgroundSubtractor):
+    
+    def __init__(
+            self,
+            video_reader: VideoSource, 
+            frame_num: int = 0,
+            inpaint_radius: int = 3,
+            method: int = cv2.INPAINT_NS,
+            *args, **kwargs
+        ) -> None:
+
+        super().__init__(*args, **kwargs)
+        self.video_reader = video_reader
+        self.frame_num = frame_num
+        self.inpaint_radius = inpaint_radius
+        self.method = method
+        self.background = None
+
+    def initialize(self):
+        '''get frame, get mask and inpaint''' 
+
+        img = self.get_frame(self.frame_num)
+        mask = polymask(img)
+        self.background = cv2.inpaint(img, mask, self.inpaint_radius, self.method)
+        self.initialized = True
+
+    def get_mask(self, img):
+        pass
+
+    def get_frame(self):
+        self.video_reader.seek_to(self.frame_num)
+        rval, frame = self.video_reader.next_frame()
+        if rval:
+            img = im2single(im2gray(frame))
+        else:
+            RuntimeError('BackgroundInpaint::get_frame frame not valid')
+        return img
+
     def get_background_image(self) -> Optional[NDArray]:
         if self.initialized:
             return self.background
