@@ -40,7 +40,7 @@ class VideoDisplay(Process):
             timestamp = time.time_ns()
             fps_hat = 1/((timestamp - last_disp_time)*1e-9)
             cv2.imshow(self.winname, frame)
-            cv2.displayStatusBar(self.winname,f'Display FPS: {fps_hat:.2f}',1)
+            #cv2.displayStatusBar(self.winname,f'Display FPS: {fps_hat:.2f}',1)
             cv2.waitKey(1)
             last_disp_time = time.time_ns()
         cv2.destroyWindow(self.winname)
