@@ -5,6 +5,13 @@ from numpy.typing import NDArray
 
 # TODO test that it works on windows
 
+# TODO I seem to have a problem as soon as a cv2 window 
+# is opened before that, VideoDisplay objects crash
+# (no window display)
+# Workaround for now: create and start the object at
+# the top of the script before anything else
+
+
 class VideoDisplay(Process):
     def __init__(
             self, 
@@ -40,7 +47,7 @@ class VideoDisplay(Process):
             timestamp = time.time_ns()
             fps_hat = 1/((timestamp - last_disp_time)*1e-9)
             cv2.imshow(self.winname, frame)
-            #cv2.displayStatusBar(self.winname,f'Display FPS: {fps_hat:.2f}',1)
+            cv2.displayStatusBar(self.winname,f'Display FPS: {fps_hat:.2f}',1)
             cv2.waitKey(1)
             last_disp_time = time.time_ns()
         cv2.destroyWindow(self.winname)
