@@ -3,7 +3,7 @@
 from PyQt5.QtCore import QTimer, pyqtSignal
 from PyQt5.QtWidgets import QPushButton, QStackedWidget, QLabel, QVBoxLayout, QWidget
 from .video_reader import OpenCV_VideoReader
-from .background import Polarity, BackgroundSubtractor, NoBackgroundSub, BackroundImage, StaticBackground, DynamicBackground, DynamicBackgroundMP
+from .background import Polarity, BackgroundSubtractor, InpaintBackground, NoBackgroundSub, BackroundImage, StaticBackground, DynamicBackground, DynamicBackgroundMP
 from qt_widgets import (
     LabeledSpinBox, LabeledComboBox, FileOpenLabeledEditButton,
     FileSaveLabeledEditButton, NDarray_to_QPixmap
@@ -41,6 +41,26 @@ class BackgroundSubtractorWidget(QWidget):
         self.parameters_image = QWidget()
         self.image_filename = FileOpenLabeledEditButton()
         self.image_filename.textChanged.connect(self.update_background_subtractor)
+
+        # inpaint background
+        self.parameters_image = QWidget()
+        self.inpaint_filename = FileOpenLabeledEditButton()
+        self.inpaint_filename.textChanged.connect(self.update_background_subtractor)
+        self.inpaint_frame_num = LabeledSpinBox()
+        self.inpaint_frame_num.setText('Frame num.')
+        self.inpaint_frame_num.setRange(0,10000000)
+        self.inpaint_frame_num.setValue(0)
+        self.inpaint_radius.valueChanged.connect(self.update_background_subtractor)
+        self.inpaint_radius = LabeledSpinBox()
+        self.inpaint_radius.setText('Radius')
+        self.inpaint_radius.setRange(0,100)
+        self.inpaint_radius.setValue(3)
+        self.inpaint_radius.valueChanged.connect(self.update_background_subtractor)
+        self.inpaint_algo = LabeledComboBox(self)
+        self.inpaint_algo.setText('algorithm')
+        self.inpaint_algo.addItem('navier-stokes')
+        self.inpaint_algo.addItem('telea')
+        self.inpaint_algo.currentIndexChanged.connect(self.update_background_subtractor)
 
         # static background
         self.parameters_static = QWidget()
@@ -93,6 +113,7 @@ class BackgroundSubtractorWidget(QWidget):
         self.bckgsub_method_combobox.setText('method')
         self.bckgsub_method_combobox.addItem('none')
         self.bckgsub_method_combobox.addItem('image')
+        self.bckgsub_method_combobox.addItem('inpaint')
         self.bckgsub_method_combobox.addItem('static')
         self.bckgsub_method_combobox.addItem('dynamic')
         self.bckgsub_method_combobox.addItem('dynamic mp')
@@ -189,8 +210,27 @@ class BackgroundSubtractorWidget(QWidget):
                     image_file_name = filepath,
                     polarity = polarity
                 )
-        
+
         if method == 2:
+            filepath = self.inpaint_filename.text()
+            if self.inpaint_algo.currentIndex() == 0:
+                algo = cv2.INPAINT_NS
+            else:
+                algo = cv2.INPAINT_TELEA
+
+            if os.path.exists(filepath):
+                video_reader = OpenCV_VideoReader()
+                video_reader.open_file(filepath)
+
+                self.background_subtractor = InpaintBackground(
+                    video_reader = video_reader,
+                    frame_num = self.inpaint_frame_num.value(),
+                    inpaint_radius = self.inpaint_radius.value(),
+                    algo = algo,
+                    polarity = polarity
+                )
+
+        if method == 3:
             filepath = self.static_filename.text()
             if os.path.exists(filepath):
                 video_reader = OpenCV_VideoReader()
@@ -201,14 +241,14 @@ class BackgroundSubtractorWidget(QWidget):
                     polarity = polarity
                 )
             
-        if method == 3:
+        if method == 4:
             self.background_subtractor = DynamicBackground(
                 num_sample_frames = self.dynamic_numsamples.value(),
                 sample_every_n_frames = self.dynamic_samplefreq.value(),
                 polarity = polarity
             )
 
-        if method == 4:
+        if method == 5:
             self.background_subtractor = DynamicBackgroundMP(
                 num_images = self.dynamic_mp_numsamples.value(),
                 every_n_image = self.dynamic_mp_samplefreq.value(),

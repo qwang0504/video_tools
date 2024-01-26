@@ -134,7 +134,7 @@ class InpaintBackground(BackgroundSubtractor):
             video_reader: VideoSource, 
             frame_num: int = 0,
             inpaint_radius: int = 3,
-            method: int = cv2.INPAINT_NS,
+            algo: int = cv2.INPAINT_NS,
             *args, **kwargs
         ) -> None:
 
@@ -142,7 +142,7 @@ class InpaintBackground(BackgroundSubtractor):
         self.video_reader = video_reader
         self.frame_num = frame_num
         self.inpaint_radius = inpaint_radius
-        self.method = method
+        self.algo = algo
         self.background = None
 
     def initialize(self):
@@ -150,7 +150,7 @@ class InpaintBackground(BackgroundSubtractor):
 
         img = self.get_frame()
         mask = polymask(img)
-        self.background = cv2.inpaint(img, mask, self.inpaint_radius, self.method)
+        self.background = cv2.inpaint(img, mask, self.inpaint_radius, self.algo)
         self.initialized = True
 
     def get_frame(self):
