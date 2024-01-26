@@ -50,7 +50,7 @@ class BackgroundSubtractorWidget(QWidget):
         self.inpaint_frame_num.setText('Frame num.')
         self.inpaint_frame_num.setRange(0,10000000)
         self.inpaint_frame_num.setValue(0)
-        self.inpaint_radius.valueChanged.connect(self.update_background_subtractor)
+        self.inpaint_frame_num.valueChanged.connect(self.update_background_subtractor)
         self.inpaint_radius = LabeledSpinBox()
         self.inpaint_radius.setText('Radius')
         self.inpaint_radius.setRange(0,100)
