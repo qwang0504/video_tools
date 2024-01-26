@@ -43,7 +43,7 @@ class BackgroundSubtractorWidget(QWidget):
         self.image_filename.textChanged.connect(self.update_background_subtractor)
 
         # inpaint background
-        self.parameters_image = QWidget()
+        self.parameters_inpaint = QWidget()
         self.inpaint_filename = FileOpenLabeledEditButton()
         self.inpaint_filename.textChanged.connect(self.update_background_subtractor)
         self.inpaint_frame_num = LabeledSpinBox()
@@ -131,6 +131,7 @@ class BackgroundSubtractorWidget(QWidget):
         self.bckgsub_parameter_stack = QStackedWidget(self)
         self.bckgsub_parameter_stack.addWidget(self.parameters_none)
         self.bckgsub_parameter_stack.addWidget(self.parameters_image)
+        self.bckgsub_parameter_stack.addWidget(self.parameters_inpaint)
         self.bckgsub_parameter_stack.addWidget(self.parameters_static)
         self.bckgsub_parameter_stack.addWidget(self.parameters_dynamic)
         self.bckgsub_parameter_stack.addWidget(self.parameters_dynamic_mp)
@@ -160,6 +161,13 @@ class BackgroundSubtractorWidget(QWidget):
         image_layout = QVBoxLayout(self.parameters_image)
         image_layout.addWidget(self.image_filename)
         image_layout.addStretch()
+
+        inpaint_layout = QVBoxLayout(self.parameters_inpaint)
+        inpaint_layout.addWidget(self.inpaint_filename)
+        inpaint_layout.addWidget(self.inpaint_frame_num)
+        inpaint_layout.addWidget(self.inpaint_radius)
+        inpaint_layout.addWidget(self.inpaint_algo)
+        inpaint_layout.addStretch()
 
         static_layout = QVBoxLayout(self.parameters_static)
         static_layout.addWidget(self.static_filename)
