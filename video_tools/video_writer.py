@@ -15,9 +15,6 @@ class VideoWriter(ABC):
 
 # video writer opencv
 class OpenCV_VideoWriter(VideoWriter):
-    '''
-    Expects grayscale images
-    '''
 
     def __init__(
             self, 
@@ -33,10 +30,12 @@ class OpenCV_VideoWriter(VideoWriter):
         self.fps = fps
         self.filename = filename
         self.fourcc = cv2.VideoWriter_fourcc(*fourcc)
-        self.writer = cv2.VideoWriter(filename, self.fourcc, fps, (width, height), False)
+        color = True
+        self.writer = cv2.VideoWriter(filename, self.fourcc, fps, (width, height), color)
 
     def write_frame(self, image: NDArray) -> None:
-        # TODO maybe check image dimensions and grayscale
+        if len(image.shape) == 2:
+            image = np.dstack((image,image,image))
         self.writer.write(image)
 
     def close(self) -> None:
@@ -52,11 +51,9 @@ class FFMPEG_VideoWriter(VideoWriter):
         self.ffmpeg_process.stdin.write(image.astype(np.uint8).tobytes())
 
     def close(self) -> None:
-        # TODO subprocess may be hanging, use kill ?
         self.ffmpeg_process.stdin.flush()
         self.ffmpeg_process.stdin.close()
         self.ffmpeg_process.wait()
-        #self.ffmpeg_process.kill()
 
 class FFMPEG_VideoWriter_GPU(FFMPEG_VideoWriter):
     # To check which encoders are available, use:
@@ -79,6 +76,8 @@ class FFMPEG_VideoWriter_GPU(FFMPEG_VideoWriter):
         
         ffmpeg_cmd = [
             "ffmpeg",
+            "-hide_banner", 
+            "-loglevel", "error",
             "-y",  # Overwrite output file if it exists
             "-f", "rawvideo",
             "-pix_fmt", "rgb24",
@@ -111,11 +110,13 @@ class FFMPEG_VideoWriter_CPU(FFMPEG_VideoWriter):
             filename: str = 'output.avi',
             codec: str = 'h264',
             profile: str = 'baseline',
-            preset: str = 'p2'
+            preset: str = 'veryfast'
         ) -> None:
         
         ffmpeg_cmd = [
             "ffmpeg",
+            "-hide_banner", 
+            "-loglevel", "error",
             "-y",  # Overwrite output file if it exists
             "-f", "rawvideo",
             "-pix_fmt", "rgb24",
@@ -125,7 +126,7 @@ class FFMPEG_VideoWriter_CPU(FFMPEG_VideoWriter):
             "-c:v", codec, 
             "-profile:v", profile,
             "-preset", preset, 
-            "-q:v", str(q),
+            "-crf", str(q),
             "-pix_fmt", "yuv420p",  # Pixel format (required for compatibility)
             filename,
         ]
