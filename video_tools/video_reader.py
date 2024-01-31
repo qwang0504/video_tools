@@ -34,6 +34,9 @@ class VideoReader(ABC):
     def get_number_of_frame(self) -> int:
         pass
 
+    def close(self) -> None:
+        pass
+
 def get_number_of_frames(filename: str, safe: bool = True):
 
     cap = cv2.VideoCapture(filename)
@@ -130,6 +133,10 @@ class OpenCV_VideoReader(VideoReader):
         else:
             self._capture = cv2.VideoCapture(filename)
         self.open = True
+
+    def close(self):
+        self._capture.release()
+        self.open = False
 
     def is_open(self) -> bool:
         return self.open
@@ -315,6 +322,10 @@ class Buffered_OpenCV_VideoReader(Process, VideoReader):
         # multiprocessing
         self._queue = Queue(maxsize=100) 
         self._stop = Event()
+        self.start()
+
+    def close(self):
+        self._stop.set()
 
     def run(self) -> None:
         if self._backend is not None:
@@ -327,12 +338,10 @@ class Buffered_OpenCV_VideoReader(Process, VideoReader):
             if not rval:
                 break
             self._queue.put((rval, frame))
+        self._capture.release()
             
     def next_frame(self):
         return self._queue.get()
-    
-    def exit(self):
-        self._stop.set()
 
     def read_frame(self) -> Tuple[bool,NDArray]:
 
@@ -379,7 +388,7 @@ class Buffered_OpenCV_VideoReader(Process, VideoReader):
     def get_number_of_frame(self) -> int:
         return self._number_of_frames
     
-class InMemory_VideoReader(VideoReader):
+class InMemory_OpenCV_VideoReader(VideoReader):
     '''
     Decode video file and buffer raw frames in memory.
     This is useful when you want to test the performance 
@@ -387,6 +396,7 @@ class InMemory_VideoReader(VideoReader):
     by how fast you can read your video file.
     Please be aware that for large pixel counts, raw frames take
     up a lot of space.
+    Specify memsize_bytes to limit memory used
     '''
     
     def __init__(self):
@@ -450,8 +460,13 @@ class InMemory_VideoReader(VideoReader):
                 raise RuntimeError('Unable to buffer all frames')
             self._mem_buffer[:,:,:,i] = frame
 
+        # close video capture
+        self._capture.release()
         self.open = True
-
+    
+    def close(self):
+        self.open = False
+    
     def is_open(self) -> bool:
         return self.open
     
@@ -459,11 +474,12 @@ class InMemory_VideoReader(VideoReader):
         self._current_frame = 0
 
     def next_frame(self) -> Tuple[bool, Optional[NDArray]]:
-        self._current_frame += 1
         if self._current_frame <= self._num_buffered_frames:
-            return (True, self._mem_buffer[:,:,:,self._current_frame]) 
+            ret, frame = (True, self._mem_buffer[:,:,:,self._current_frame])
+            self._current_frame += 1
         else:
-            return (False, None)
+            ret, frame = (False, None)
+        return (ret, frame)
 
     def read(self) -> Tuple[bool,NDArray]:
         """
