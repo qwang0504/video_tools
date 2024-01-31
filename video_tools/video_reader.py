@@ -437,7 +437,7 @@ class InMemory_OpenCV_VideoReader(VideoReader):
         # compute number of frames
         self._num_buffered_frames = min(
             self._number_of_frames,
-            self._memsize_bytes / (self._width*self._height*self._num_channels)
+            np.floor(self._memsize_bytes / (self._width*self._height*self._num_channels))
         )
         
         # preallocate numpy array
