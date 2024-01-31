@@ -5,7 +5,6 @@ import numpy as np
 from abc import ABC
 
 # TODO maybe add a multiprocessing queue
-# TODO add protocol or abc
 
 class VideoWriter(ABC):
     def write_frame(self, image: NDArray) -> None:
@@ -44,7 +43,22 @@ class OpenCV_VideoWriter(VideoWriter):
         self.writer.release()
 
 # video writer ffmpeg
-class FFMPEG_VideoWriter_GPU(VideoWriter):
+class FFMPEG_VideoWriter(VideoWriter):
+
+    def write_frame(self, image: NDArray) -> None:
+        # requires RGB images
+        if len(image.shape) == 2:
+            image = np.dstack((image,image,image))
+        self.ffmpeg_process.stdin.write(image.astype(np.uint8).tobytes())
+
+    def close(self) -> None:
+        # TODO subprocess may be hanging, use kill ?
+        self.ffmpeg_process.stdin.flush()
+        self.ffmpeg_process.stdin.close()
+        self.ffmpeg_process.wait()
+        #self.ffmpeg_process.kill()
+
+class FFMPEG_VideoWriter_GPU(FFMPEG_VideoWriter):
     # To check which encoders are available, use:
     # ffmpeg -encoders
     #
@@ -79,27 +93,14 @@ class FFMPEG_VideoWriter_GPU(VideoWriter):
             filename,
         ]
         self.ffmpeg_process = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
-
-    def write_frame(self, image: NDArray) -> None:
-        # requires RGB images
-        if len(image.shape) == 2:
-            image = np.dstack((image,image,image))
-        self.ffmpeg_process.stdin.write(image.astype(np.uint8).tobytes())
-
-    def close(self) -> None:
-        # TODO subprocess may be hanging, use kill ?
-        self.ffmpeg_process.stdin.flush()
-        self.ffmpeg_process.stdin.close()
-        self.ffmpeg_process.wait()
-        #self.ffmpeg_process.kill()
         
 # video writer ffmpeg
-class FFMPEG_VideoWriter(VideoWriter):
+class FFMPEG_VideoWriter_CPU(FFMPEG_VideoWriter):
     # To check which encoders are available, use:
     # ffmpeg -encoders
     #
     # To check which profiles and presets are available for a given encoder use:
-    # ffmpeg -h encoder=h264_nvenc
+    # ffmpeg -h encoder=h264
 
     def __init__(
             self, 
@@ -130,16 +131,4 @@ class FFMPEG_VideoWriter(VideoWriter):
         ]
         self.ffmpeg_process = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
 
-    def write_frame(self, image: NDArray) -> None:
-        # requires RGB images
-        if len(image.shape) == 2:
-            image = np.dstack((image,image,image))
-        self.ffmpeg_process.stdin.write(image.astype(np.uint8).tobytes())
-
-    def close(self) -> None:
-        # TODO subprocess may be hanging, use kill ?
-        self.ffmpeg_process.stdin.flush()
-        self.ffmpeg_process.stdin.close()
-        self.ffmpeg_process.wait()
-        #self.ffmpeg_process.kill()
         
