@@ -5,7 +5,7 @@ from typing import Tuple, Optional, Dict
 from multiprocessing import Queue, Process, Event 
 from abc import ABC
 from tqdm import tqdm
-
+from image_tools import im2single, im2gray
 # TODO: add resizing as an option 
 # TODO: Check index error (+-1). Make sure that number of frames is correct (end index valid)
 
@@ -410,7 +410,9 @@ class InMemory_OpenCV_VideoReader(VideoReader):
             memsize_bytes: int = 1e9, # one GB by default
             resize: float = 1,
             crop: Optional[Tuple[int,int,int,int]] = None,
-            backend: Optional[int] = None
+            backend: Optional[int] = None,
+            single_precision: bool = False,
+            grayscale: bool = False
         ) -> None:
             
         # store param
@@ -426,8 +428,17 @@ class InMemory_OpenCV_VideoReader(VideoReader):
         self._video_info = get_video_info(filename, safe)
         self._number_of_frames = self._video_info['num_frames']
         self._fps = self._video_info['fps']
-        self._num_channels = self._video_info['num_channels']
-        self._type = self._video_info['data_type']
+
+        if grayscale:
+            self._num_channels = 1
+        else:
+            self._num_channels = self._video_info['num_channels']
+
+        if single_precision:
+            self._type = np.dtype(np.float32)
+        else:
+            self._type = self._video_info['data_type']
+
         if crop is not None:
             self._width = int(crop[2] * resize)
             self._height = int(crop[3] * resize)
@@ -438,7 +449,7 @@ class InMemory_OpenCV_VideoReader(VideoReader):
         # compute number of frames
         self._num_buffered_frames = min(
             self._number_of_frames,
-            int(self._memsize_bytes // (self._width*self._height*self._num_channels))
+            int(self._memsize_bytes // (self._width*self._height*self._num_channels*self._type.itemsize))
         )
         
         # preallocate numpy array
@@ -460,12 +471,19 @@ class InMemory_OpenCV_VideoReader(VideoReader):
             rval, frame = self.read()
             if not rval:
                 raise RuntimeError('Unable to buffer all frames')
+            
+            if single_precision:
+                frame = im2single(frame)
+
+            if grayscale:
+                frame = im2gray(frame)
+                
             self._mem_buffer[:,:,:,i] = frame
 
         # close video capture
         self._capture.release()
         self.open = True
-    
+
     def close(self):
         self.open = False
     
@@ -528,3 +546,4 @@ class InMemory_OpenCV_VideoReader(VideoReader):
     
     def get_number_of_frame(self) -> int:
         return self._num_buffered_frames
+    
