@@ -454,9 +454,11 @@ class InMemory_OpenCV_VideoReader(VideoReader):
             int(self._memsize_bytes // (self._width*self._height*self._num_channels*self._type.itemsize))
         )
         
-        # I store this in a least instead of preallocating 
-        # a large numpy array because that means I don't have
-        # to copy the frame afterwards
+        # Turns out it's faster to store this in a list rather than
+        # in a large preallocated 3D or 4D numpy array (at least 
+        # when stacking in the last dimension).
+        # It's also faster if I subsequently modify the image 
+        # cause I don't need to copy
         self._mem_buffer = [] 
 
         # open video capture
