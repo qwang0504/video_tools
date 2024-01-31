@@ -477,7 +477,9 @@ class InMemory_OpenCV_VideoReader(VideoReader):
 
             if grayscale:
                 frame = im2gray(frame)
-                
+                print(frame.shape)
+                print(self._mem_buffer.shape)
+
             self._mem_buffer[:,:,:,i] = frame
 
         # close video capture
