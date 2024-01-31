@@ -423,18 +423,20 @@ class InMemory_OpenCV_VideoReader(VideoReader):
         self._crop = crop # [left,bottom,width,height]
         self._resize = resize
         self._backend = backend
+        self._single_precision = single_precision
+        self._grayscale = grayscale
 
         # get video metadata 
         self._video_info = get_video_info(filename, safe)
         self._number_of_frames = self._video_info['num_frames']
         self._fps = self._video_info['fps']
 
-        if grayscale:
+        if self._grayscale:
             self._num_channels = 1
         else:
             self._num_channels = self._video_info['num_channels']
 
-        if single_precision:
+        if self._single_precision:
             self._type = np.dtype(np.float32)
         else:
             self._type = self._video_info['data_type']
@@ -453,10 +455,16 @@ class InMemory_OpenCV_VideoReader(VideoReader):
         )
         
         # preallocate numpy array
-        self._mem_buffer = np.zeros(
-            (self._height, self._width, self._num_channels, self._num_buffered_frames), 
-            dtype = self._type
-        )
+        if grayscale:
+            self._mem_buffer = np.zeros(
+                (self._height, self._width, self._num_buffered_frames), 
+                dtype = self._type
+            )
+        else:
+            self._mem_buffer = np.zeros(
+                (self._height, self._width, self._num_channels, self._num_buffered_frames), 
+                dtype = self._type
+            )
 
         # open video capture
         if backend is not None:
@@ -472,15 +480,14 @@ class InMemory_OpenCV_VideoReader(VideoReader):
             if not rval:
                 raise RuntimeError('Unable to buffer all frames')
             
-            if single_precision:
+            if self._single_precision:
                 frame = im2single(frame)
 
-            if grayscale:
+            if self._grayscale:
                 frame = im2gray(frame)
-                print(frame.shape)
-                print(self._mem_buffer.shape)
-
-            self._mem_buffer[:,:,:,i] = frame
+                self._mem_buffer[:,:,i] = frame
+            else:
+                self._mem_buffer[:,:,:,i] = frame
 
         # close video capture
         self._capture.release()
@@ -497,7 +504,10 @@ class InMemory_OpenCV_VideoReader(VideoReader):
 
     def next_frame(self) -> Tuple[bool, Optional[NDArray]]:
         if self._current_frame <= self._num_buffered_frames:
-            ret, frame = (True, self._mem_buffer[:,:,:,self._current_frame])
+            if self._grayscale:
+                ret, frame = (True, self._mem_buffer[:,:,self._current_frame])
+            else:
+                ret, frame = (True, self._mem_buffer[:,:,:,self._current_frame])
             self._current_frame += 1
         else:
             ret, frame = (False, None)
