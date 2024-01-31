@@ -2,11 +2,20 @@ import cv2
 from numpy.typing import NDArray
 import subprocess
 import numpy as np
+from abc import ABC
 
 # TODO maybe add a multiprocessing queue
+# TODO add protocol or abc
+
+class VideoWriter(ABC):
+    def write_frame(self, image: NDArray) -> None:
+        pass
+
+    def close(self) -> None:
+        pass
 
 # video writer opencv
-class OpenCV_VideoWriter:
+class OpenCV_VideoWriter(VideoWriter):
     '''
     Expects grayscale images
     '''
@@ -35,7 +44,7 @@ class OpenCV_VideoWriter:
         self.writer.release()
 
 # video writer ffmpeg
-class FFMPEG_VideoWriter:
+class FFMPEG_VideoWriter_GPU(VideoWriter):
     # To check which encoders are available, use:
     # ffmpeg -encoders
     #
@@ -66,6 +75,56 @@ class FFMPEG_VideoWriter:
             "-profile:v", profile,
             "-preset", preset, 
             "-cq:v", str(q),
+            "-pix_fmt", "yuv420p",  # Pixel format (required for compatibility)
+            filename,
+        ]
+        self.ffmpeg_process = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
+
+    def write_frame(self, image: NDArray) -> None:
+        # requires RGB images
+        if len(image.shape) == 2:
+            image = np.dstack((image,image,image))
+        self.ffmpeg_process.stdin.write(image.astype(np.uint8).tobytes())
+
+    def close(self) -> None:
+        # TODO subprocess may be hanging, use kill ?
+        self.ffmpeg_process.stdin.flush()
+        self.ffmpeg_process.stdin.close()
+        self.ffmpeg_process.wait()
+        #self.ffmpeg_process.kill()
+        
+# video writer ffmpeg
+class FFMPEG_VideoWriter(VideoWriter):
+    # To check which encoders are available, use:
+    # ffmpeg -encoders
+    #
+    # To check which profiles and presets are available for a given encoder use:
+    # ffmpeg -h encoder=h264_nvenc
+
+    def __init__(
+            self, 
+            height: int, 
+            width: int, 
+            fps: int = 25, 
+            q: int = 23,
+            filename: str = 'output.avi',
+            codec: str = 'h264',
+            profile: str = 'baseline',
+            preset: str = 'p2'
+        ) -> None:
+        
+        ffmpeg_cmd = [
+            "ffmpeg",
+            "-y",  # Overwrite output file if it exists
+            "-f", "rawvideo",
+            "-pix_fmt", "rgb24",
+            "-r", str(fps),  # Frames per second
+            "-s", f"{width}x{height}",  # Specify image size
+            "-i", "-",  # Input from pipe
+            "-c:v", codec, 
+            "-profile:v", profile,
+            "-preset", preset, 
+            "-q:v", str(q),
             "-pix_fmt", "yuv420p",  # Pixel format (required for compatibility)
             filename,
         ]
