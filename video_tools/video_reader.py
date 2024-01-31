@@ -4,6 +4,7 @@ import numpy as np
 from typing import Tuple, Optional, Dict
 from multiprocessing import Queue, Process, Event 
 from abc import ABC
+from tqdm import tqdm
 
 # TODO: add resizing as an option 
 # TODO: Check index error (+-1). Make sure that number of frames is correct (end index valid)
@@ -454,7 +455,8 @@ class InMemory_OpenCV_VideoReader(VideoReader):
         self.open = True
 
         # load frames from file into memory
-        for i in range(self._num_buffered_frames): 
+        print('Buffering video...')
+        for i in tqdm(range(self._num_buffered_frames)): 
             rval, frame = self.read()
             if not rval:
                 raise RuntimeError('Unable to buffer all frames')
