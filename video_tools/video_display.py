@@ -49,7 +49,7 @@ class VideoDisplay(Process):
             try:
                 frame = self.queue.get(timeout=2/self.fps)
             except Empty:
-                pass
+                continue
             timestamp = time.time_ns()
             fps_hat = 1/((timestamp - last_disp_time)*1e-9)
             cv2.imshow(self.winname, frame)
