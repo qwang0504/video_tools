@@ -108,12 +108,12 @@ class BackgroundSubtractorWidget(QWidget):
         self.dynamic_mp_samplefreq.setValue(10)
         self.dynamic_mp_samplefreq.valueChanged.connect(self.update_background_subtractor)
         self.dynamic_mp_width = LabeledSpinBox()
-        self.dynamic_mp_width.setText('Width')
+        self.dynamic_mp_width.setText('width')
         self.dynamic_mp_width.setRange(1,10000)
         self.dynamic_mp_width.setValue(10)
         self.dynamic_mp_width.valueChanged.connect(self.update_background_subtractor)
         self.dynamic_mp_height = LabeledSpinBox()
-        self.dynamic_mp_height.setText('Height')
+        self.dynamic_mp_height.setText('height')
         self.dynamic_mp_height.setRange(1,10000)
         self.dynamic_mp_height.setValue(10)
         self.dynamic_mp_height.valueChanged.connect(self.update_background_subtractor)
@@ -171,7 +171,7 @@ class BackgroundSubtractorWidget(QWidget):
         none_layout = QVBoxLayout(self.parameters_none)
         none_layout.addWidget(self.none_height)
         none_layout.addWidget(self.none_width)
-        none_layout.addStretch
+        none_layout.addStretch()
 
         image_layout = QVBoxLayout(self.parameters_image)
         image_layout.addWidget(self.image_filename)
@@ -214,6 +214,7 @@ class BackgroundSubtractorWidget(QWidget):
     def set_video_file(self, filename: str) -> None:
         self.video_file = filename
         self.static_filename.setEditField(filename)
+        self.inpaint_filename.setEditField(filename)
 
     def update_background_subtractor(self):
         method = self.bckgsub_method_combobox.currentIndex()
