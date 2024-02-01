@@ -4,15 +4,6 @@ import time
 from numpy.typing import NDArray
 from queue import Empty
 
-# WARNING I seem to have a problem as soon as a cv2 window 
-# is opened before that, VideoDisplay objects crash
-# (no window display)
-# Workaround for now: create and start the object at
-# the top of the script before anything else
-# This seems to be a fork specific issue: looks like
-# forking brings unwanted opencv context that fucks things up
-# I have no issue when forcing to spawn instead
-
 class VideoDisplay(Process):
     def __init__(
             self, 
@@ -33,7 +24,8 @@ class VideoDisplay(Process):
         if get_start_method() == 'fork':
             raise RuntimeError('''
                 Mutliprocessing is configured to fork new processes. 
-                This class only supports multiprocessing with 'spawn'.
+                This class only supports multiprocessing with 'spawn'
+                due to incompatibility issues with opencv's GUI handling.
                 Please add set_start_method('spawn') at the beginning
                 of your script.
             ''')
