@@ -1,10 +1,10 @@
-from multiprocessing import Process, Queue, Event
+from multiprocessing import Process, Queue, Event, get_start_method
 import cv2
 import time
 from numpy.typing import NDArray
 from queue import Empty
 
-# TODO I seem to have a problem as soon as a cv2 window 
+# WARNING I seem to have a problem as soon as a cv2 window 
 # is opened before that, VideoDisplay objects crash
 # (no window display)
 # Workaround for now: create and start the object at
@@ -22,12 +22,21 @@ class VideoDisplay(Process):
             *args,
             **kwargs
         ) -> None:
+
         super().__init__(*args, **kwargs)
         self.fps = fps
         self.queue = queue
         self.winname = winname
         self.last_image_time = 0
         self.stop_event = Event()
+
+        if get_start_method() == 'fork':
+            raise RuntimeError('''
+                Mutliprocessing is configured to fork new processes. 
+                This class only supports multiprocessing with 'spawn'.
+                Please add set_start_method('spawn') at the beginning
+                of your script.
+            ''')
 
     def queue_image(self, image: NDArray) -> None:
         '''check fps, discard frames if time not elapsed'''
@@ -42,7 +51,7 @@ class VideoDisplay(Process):
     def run(self) -> None:
 
         cv2.namedWindow(self.winname)
-        
+
         last_disp_time = time.time_ns()
         while not self.stop_event.is_set():
             try:
