@@ -226,7 +226,7 @@ class BackgroundSubtractorWidget(QWidget):
         if method == 0:
             self.background_subtractor = NoBackgroundSub(
                 height = self.none_height.value(),
-                widht = self.none_width.value(),
+                width = self.none_width.value(),
                 polarity = polarity
             )
 

@@ -97,14 +97,19 @@ class VideoSource(Protocol):
 
 
 class NoBackgroundSub(BackgroundSubtractor):
-    def initialize(
-            self,
+    def __init__(
+            self, 
             height: int,
-            width: int
-        ):
-        self.initialized = True
+            width: int, 
+            *args, **kwargs
+        ) -> None:
+        
+        super().__init__(*args, **kwargs)
         self.height = height
         self.width = width
+
+    def initialize(self):
+        self.initialized = True
 
     def get_background_image(self) -> Optional[NDArray]:
         return np.zeros((self.height, self.width), dtype=np.float32)
