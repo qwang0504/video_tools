@@ -36,6 +36,16 @@ class BackgroundSubtractorWidget(QWidget):
 
         # none
         self.parameters_none = QWidget()
+        self.none_height = LabeledSpinBox()
+        self.none_height.setText('Height')
+        self.none_height.setRange(0,10000000)
+        self.none_height.setValue(0)
+        self.none_height.valueChanged.connect(self.update_background_subtractor)
+        self.none_width = LabeledSpinBox()
+        self.none_width.setText('Width')
+        self.none_width.setRange(0,10000000)
+        self.none_width.setValue(0)
+        self.none_width.valueChanged.connect(self.update_background_subtractor)
 
         # image background
         self.parameters_image = QWidget()
@@ -158,6 +168,11 @@ class BackgroundSubtractorWidget(QWidget):
         main_layout.addWidget(self.background_image)
         main_layout.addWidget(self.save_filename)
 
+        none_layout = QVBoxLayout(self.parameters_none)
+        none_layout.addWidget(self.none_height)
+        none_layout.addWidget(self.none_width)
+        none_layout.addStretch
+
         image_layout = QVBoxLayout(self.parameters_image)
         image_layout.addWidget(self.image_filename)
         image_layout.addStretch()
@@ -209,7 +224,11 @@ class BackgroundSubtractorWidget(QWidget):
             polarity = Polarity.BRIGHT_ON_DARK
         
         if method == 0:
-            self.background_subtractor = NoBackgroundSub(polarity = polarity)
+            self.background_subtractor = NoBackgroundSub(
+                height = self.none_height.value(),
+                widht = self.none_width.value(),
+                polarity = polarity
+            )
 
         if method == 1:
             filepath = self.image_filename.text()
