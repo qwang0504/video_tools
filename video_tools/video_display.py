@@ -35,23 +35,16 @@ class VideoDisplay(Process):
         if ((t - self.last_image_time)*1e-9) >= (1/self.fps):
             self.queue.put(image)
             self.last_image_time = t
-            print('queued')
 
     def exit(self) -> None:
         self.stop_event.set()
 
     def run(self) -> None:
 
-        # try to reinitialize opencv after fork
-        cv2.destroyAllWindows()
-        cv2.waitKey(1)
-
-        print('test0')
         cv2.namedWindow(self.winname)
-        print('test1')
+        
         last_disp_time = time.time_ns()
         while not self.stop_event.is_set():
-            print('test2')
             try:
                 frame = self.queue.get(timeout=2/self.fps)
             except Empty:
@@ -61,7 +54,6 @@ class VideoDisplay(Process):
             cv2.imshow(self.winname, frame)
             cv2.displayStatusBar(self.winname, f'Display FPS: {fps_hat:.2f}', 1)
             cv2.waitKey(1)
-            print('disped')
             last_disp_time = time.time_ns()
 
         cv2.destroyWindow(self.winname)
