@@ -3,7 +3,7 @@ from numpy.typing import NDArray
 from scipy import stats
 from typing import Protocol, Tuple, Optional
 from collections import deque
-from image_tools import im2gray, im2single, polymask
+from image_tools import im2single, polymask
 from multiprocessing import Process, Event, Pool, cpu_count
 from multiprocessing.sharedctypes import RawArray, Value
 import ctypes
@@ -126,7 +126,7 @@ class BackroundImage(BackgroundSubtractor):
 
     def initialize(self) -> None:
         image = cv2.imread(self.image_file_name)
-        self.background = im2single(im2gray(image)) 
+        self.background = im2single(image[:,:,0]) 
         self.initialized = True
     
     def get_background_image(self) -> Optional[NDArray]:
@@ -168,7 +168,7 @@ class InpaintBackground(BackgroundSubtractor):
         self.video_reader.seek_to(self.frame_num)
         rval, frame = self.video_reader.next_frame()
         if rval:
-            img = im2single(im2gray(frame))
+            img = im2single(frame[:,:,0])
         else:
             RuntimeError('BackgroundInpaint::get_frame frame not valid')
         return img
@@ -212,7 +212,7 @@ class StaticBackground(BackgroundSubtractor):
             self.video_reader.seek_to(index)
             rval, frame = self.video_reader.next_frame()
             if rval:
-                sample_frames[:,:,i] = im2single(im2gray(frame))
+                sample_frames[:,:,i] = im2single(frame[:,:,0])
             else:
                 RuntimeError('StaticBackground::sample_frames_evenly frame not valid')
         return sample_frames
