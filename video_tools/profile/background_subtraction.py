@@ -32,7 +32,7 @@ num_frames = video_reader.get_number_of_frame()
 background_sub = BackroundImage(
     polarity = POLARITY,
     image_file_name = BACKGROUND_IMAGE,
-    use_gpu=True
+    use_gpu=False
 )
 background_sub.initialize()
 
@@ -44,11 +44,8 @@ with cProfile.Profile() as pr:
         if not rval:
             raise RuntimeError('VideoReader was unable to read the whole video')
         
-        # background expects single precision grayscale
-        frame_gray = im2single_GPU(im2gray(frame))
-        
         # background sub
-        background_sub.subtract_background(frame_gray)
+        background_sub.subtract_background(frame)
 
 video_reader.close()
 ps = pstats.Stats(pr)
