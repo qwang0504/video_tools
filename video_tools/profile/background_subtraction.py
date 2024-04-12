@@ -3,7 +3,7 @@ from video_tools import (
     NoBackgroundSub, BackroundImage, InpaintBackground, 
     StaticBackground, DynamicBackground, DynamicBackgroundMP
 )
-from image_tools import im2single, im2gray
+from image_tools import im2single, im2single_GPU, im2gray
 from tqdm import tqdm
 import cProfile
 import pstats
@@ -23,8 +23,8 @@ video_reader.open_file(
     filename=INPUT_VIDEO,
     safe=False,
     memsize_bytes=4e9,
-    single_precision=True,
-    grayscale=True
+    single_precision=False,
+    grayscale=False
 )
 num_frames = video_reader.get_number_of_frame()
 
@@ -45,7 +45,7 @@ with cProfile.Profile() as pr:
             raise RuntimeError('VideoReader was unable to read the whole video')
         
         # background expects single precision grayscale
-        frame_gray = im2single(im2gray(frame))
+        frame_gray = im2single_GPU(im2gray(frame))
         
         # background sub
         background_sub.subtract_background(frame_gray)
