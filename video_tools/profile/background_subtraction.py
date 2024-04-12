@@ -22,7 +22,8 @@ num_frames = video_reader.get_number_of_frame()
 # background subtraction
 background_sub = BackroundImage(
     polarity = Polarity.DARK_ON_BRIGHT,
-    image_file_name = 'toy_data/freely_swimming_param.png'
+    image_file_name = 'toy_data/freely_swimming_param.png',
+    use_gpu=True
 )
 background_sub.initialize()
 

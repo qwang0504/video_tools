@@ -11,7 +11,7 @@ from tqdm import tqdm
 import cv2
 from abc import ABC, abstractmethod
 from enum import Enum
-
+import cupy as cp
 
 def my_mode(x: NDArray) -> NDArray:
     return stats.mode(x, axis=2, keepdims=False).mode
@@ -36,8 +36,8 @@ def mode(arr: NDArray, num_processes: int = cpu_count()):
     return out
 
 class Polarity(Enum):
-    DARK_ON_BRIGHT = -1,
-    BRIGHT_ON_DARK = 1,   
+    DARK_ON_BRIGHT = -1
+    BRIGHT_ON_DARK = 1
 
     # this is useful for argparse
     def __str__(self):
@@ -119,14 +119,19 @@ class NoBackgroundSub(BackgroundSubtractor):
 
 
 class BackroundImage(BackgroundSubtractor):
-    def __init__(self, image_file_name, *args, **kwargs) -> None:
+    def __init__(self, image_file_name, use_gpu: bool = False, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.image_file_name = image_file_name
         self.background = None
+        self.background_gpu = None
+        self.use_gpu = use_gpu
 
     def initialize(self) -> None:
         image = cv2.imread(self.image_file_name)
         self.background = im2single(im2gray(image)) 
+        if self.use_gpu:
+            self.background_gpu = cp.asarray(self.background)
+        
         self.initialized = True
     
     def get_background_image(self) -> Optional[NDArray]:
@@ -136,7 +141,14 @@ class BackroundImage(BackgroundSubtractor):
             return None
 
     def subtract_background(self, image: NDArray) -> NDArray:
-        return np.maximum(0, self.polarity.value*(image - self.background))
+        if self.use_gpu:
+            image_gpu = cp.asarray(image)
+            print(type(self.polarity.value))
+            image_sub_gpu = cp.maximum(0, self.polarity.value[0]*(image_gpu - self.background_gpu))
+            image_sub = image_sub_gpu.get()
+        else:
+            image_sub = np.maximum(0, self.polarity.value*(image - self.background))
+        return image_sub
 
 class InpaintBackground(BackgroundSubtractor):
     
