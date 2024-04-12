@@ -3,7 +3,7 @@ from numpy.typing import NDArray
 from scipy import stats
 from typing import Protocol, Tuple, Optional
 from collections import deque
-from image_tools import im2gray, im2single, polymask
+from image_tools import im2single, im2gray, polymask
 from multiprocessing import Process, Event, Pool, cpu_count
 from multiprocessing.sharedctypes import RawArray, Value
 import ctypes
