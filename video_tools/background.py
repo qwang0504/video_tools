@@ -13,6 +13,8 @@ from abc import ABC, abstractmethod
 from enum import Enum
 import cupy as cp
 
+# NOTE: using GPU can be beneficial for large images, but detrimental for small ones 
+
 def my_mode(x: NDArray) -> NDArray:
     return stats.mode(x, axis=2, keepdims=False).mode
 
