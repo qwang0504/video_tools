@@ -23,7 +23,7 @@ num_frames = video_reader.get_number_of_frame()
 background_sub = BackroundImage(
     polarity = Polarity.DARK_ON_BRIGHT,
     image_file_name = 'toy_data/freely_swimming_param.png',
-    use_gpu=True
+    use_gpu=False
 )
 background_sub.initialize()
 

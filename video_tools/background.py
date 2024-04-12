@@ -143,8 +143,7 @@ class BackroundImage(BackgroundSubtractor):
     def subtract_background(self, image: NDArray) -> NDArray:
         if self.use_gpu:
             image_gpu = cp.asarray(image)
-            print(type(self.polarity.value))
-            image_sub_gpu = cp.maximum(0, self.polarity.value[0]*(image_gpu - self.background_gpu))
+            image_sub_gpu = cp.maximum(0, self.polarity.value*(image_gpu - self.background_gpu))
             image_sub = image_sub_gpu.get()
         else:
             image_sub = np.maximum(0, self.polarity.value*(image - self.background))
