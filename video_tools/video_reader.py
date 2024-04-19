@@ -497,7 +497,7 @@ class InMemory_OpenCV_VideoReader(VideoReader):
         self._current_frame = 0
 
     def next_frame(self) -> Tuple[bool, Optional[NDArray]]:
-        if self._current_frame <= self._num_buffered_frames:
+        if self._current_frame < self._num_buffered_frames:
             ret, frame = (True, self._mem_buffer[self._current_frame])
             self._current_frame += 1
         else:
