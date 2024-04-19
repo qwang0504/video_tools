@@ -515,7 +515,7 @@ class InMemory_OpenCV_VideoReader(VideoReader):
                     self._crop[1]:self._crop[1]+self._crop[3],
                     self._crop[0]:self._crop[0]+self._crop[2]
                 ]
-            if self._resize is not None:
+            if (self._resize is not None) and (self._resize != 1):
                 frame = cv2.resize(
                     frame,
                     None,
