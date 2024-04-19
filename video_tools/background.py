@@ -3,7 +3,7 @@ from numpy.typing import NDArray
 from scipy import stats
 from typing import Protocol, Tuple, Optional
 from collections import deque
-from image_tools import im2single, im2gray, polymask
+from image_tools import im2single, im2single_GPU, im2gray_GPU, im2gray, polymask
 from multiprocessing import Process, Event, Pool, cpu_count
 from multiprocessing.sharedctypes import RawArray, Value
 import ctypes
@@ -11,7 +11,10 @@ from tqdm import tqdm
 import cv2
 from abc import ABC, abstractmethod
 from enum import Enum
+import cupy as cp
 
+# NOTE: using GPU can be beneficial for large images, but detrimental for small ones 
+# TODO: make subtract_background(self, image: NDArray) convert images  
 
 def my_mode(x: NDArray) -> NDArray:
     return stats.mode(x, axis=2, keepdims=False).mode
@@ -36,8 +39,8 @@ def mode(arr: NDArray, num_processes: int = cpu_count()):
     return out
 
 class Polarity(Enum):
-    DARK_ON_BRIGHT = -1,
-    BRIGHT_ON_DARK = 1,   
+    DARK_ON_BRIGHT = -1
+    BRIGHT_ON_DARK = 1
 
     # this is useful for argparse
     def __str__(self):
@@ -115,18 +118,23 @@ class NoBackgroundSub(BackgroundSubtractor):
         return np.zeros((self.height, self.width), dtype=np.float32)
 
     def subtract_background(self, image: NDArray) -> NDArray:
-        return image 
+        return im2single(im2gray(image)) 
 
 
 class BackroundImage(BackgroundSubtractor):
-    def __init__(self, image_file_name, *args, **kwargs) -> None:
+    def __init__(self, image_file_name, use_gpu: bool = False, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.image_file_name = image_file_name
         self.background = None
+        self.background_gpu = None
+        self.use_gpu = use_gpu
 
     def initialize(self) -> None:
         image = cv2.imread(self.image_file_name)
         self.background = im2single(im2gray(image)) 
+        if self.use_gpu:
+            self.background_gpu = cp.asarray(self.background)
+        
         self.initialized = True
     
     def get_background_image(self) -> Optional[NDArray]:
@@ -136,7 +144,15 @@ class BackroundImage(BackgroundSubtractor):
             return None
 
     def subtract_background(self, image: NDArray) -> NDArray:
-        return np.maximum(0, self.polarity.value*(image - self.background))
+        if self.use_gpu:
+            image_gpu = cp.asarray(image)
+            image_single_gpu = im2single_GPU(im2gray_GPU(image_gpu))
+            image_sub_gpu = cp.maximum(0, self.polarity.value*(image_single_gpu - self.background_gpu))
+            image_sub = image_sub_gpu.get()
+        else:
+            image_single = im2single(im2gray(image))
+            image_sub = np.maximum(0, self.polarity.value*(image_single - self.background))
+        return image_sub
 
 class InpaintBackground(BackgroundSubtractor):
     
@@ -146,6 +162,7 @@ class InpaintBackground(BackgroundSubtractor):
             frame_num: int = 0,
             inpaint_radius: int = 3,
             algo: int = cv2.INPAINT_NS,
+            use_gpu: bool = False,
             *args, **kwargs
         ) -> None:
 
@@ -155,6 +172,7 @@ class InpaintBackground(BackgroundSubtractor):
         self.inpaint_radius = inpaint_radius
         self.algo = algo
         self.background = None
+        self.use_gpu = use_gpu
 
     def initialize(self):
         '''get frame, get mask and inpaint''' 
@@ -162,6 +180,8 @@ class InpaintBackground(BackgroundSubtractor):
         img = self.get_frame()
         mask = polymask(img)
         self.background = cv2.inpaint(img, mask, self.inpaint_radius, self.algo)
+        if self.use_gpu:
+            self.background_gpu = cp.asarray(self.background)
         self.initialized = True
 
     def get_frame(self):
@@ -180,8 +200,16 @@ class InpaintBackground(BackgroundSubtractor):
             return None
 
     def subtract_background(self, image: NDArray) -> NDArray:
-        return np.maximum(0, self.polarity.value*(image - self.background))
-
+        if self.use_gpu:
+            image_gpu = cp.asarray(image)
+            image_single_gpu = im2single_GPU(im2gray_GPU(image_gpu))
+            image_sub_gpu = cp.maximum(0, self.polarity.value*(image_single_gpu - self.background_gpu))
+            image_sub = image_sub_gpu.get()
+        else:
+            image_single = im2single(im2gray(image))
+            image_sub = np.maximum(0, self.polarity.value*(image_single - self.background))
+        return image_sub
+    
 
 class StaticBackground(BackgroundSubtractor):
     '''
@@ -192,12 +220,14 @@ class StaticBackground(BackgroundSubtractor):
             self,
             video_reader: VideoSource, 
             num_sample_frames: int = 500,
+            use_gpu: bool = False,
             *args, **kwargs
         ) -> None:
         super().__init__(*args, **kwargs)
         self.video_reader = video_reader
         self.num_sample_frames = num_sample_frames
         self.background = None
+        self.use_gpu = use_gpu
 
     def sample_frames_evenly(self) -> NDArray:
         '''
@@ -236,6 +266,8 @@ class StaticBackground(BackgroundSubtractor):
         self.compute_background(frame_collection)
         self.video_reader.reset_reader()
         print('...done')
+        if self.use_gpu:
+            self.background_gpu = cp.asarray(self.background)
         self.initialized = True
 
     def get_background_image(self) -> Optional[NDArray]:
@@ -245,7 +277,15 @@ class StaticBackground(BackgroundSubtractor):
             return None
 
     def subtract_background(self, image: NDArray) -> NDArray:
-        return np.maximum(0, self.polarity.value*(image - self.background))
+        if self.use_gpu:
+            image_gpu = cp.asarray(image)
+            image_single_gpu = im2single_GPU(im2gray_GPU(image_gpu))
+            image_sub_gpu = cp.maximum(0, self.polarity.value*(image_single_gpu - self.background_gpu))
+            image_sub = image_sub_gpu.get()
+        else:
+            image_single = im2single(im2gray(image))
+            image_sub = np.maximum(0, self.polarity.value*(image_single - self.background))
+        return image_sub
 
 
 class DynamicBackground(BackgroundSubtractor):
