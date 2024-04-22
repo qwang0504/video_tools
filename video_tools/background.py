@@ -12,6 +12,7 @@ import cv2
 from abc import ABC, abstractmethod
 from enum import Enum
 import cupy as cp
+import os
 
 # NOTE: using GPU can be beneficial for large images, but detrimental for small ones 
 # TODO: make subtract_background(self, image: NDArray) convert images  
@@ -130,7 +131,15 @@ class BackroundImage(BackgroundSubtractor):
         self.use_gpu = use_gpu
 
     def initialize(self) -> None:
-        image = cv2.imread(self.image_file_name)
+        
+        _, ext = os.path.splitext(self.image_file_name)
+        if ext == '.npy':
+            image = np.load(self.image_file_name)
+        elif ext in ['.png', '.jpg', '.jpeg', '.tif', '.tiff']:
+            image = cv2.imread(self.image_file_name)
+        else:
+            raise ValueError(f'{self.image_file_name} image type unknown')
+        
         self.background = im2single(im2gray(image)) 
         if self.use_gpu:
             self.background_gpu = cp.asarray(self.background)
