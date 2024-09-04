@@ -3,7 +3,7 @@ from numpy.typing import NDArray
 from scipy import stats
 from typing import Protocol, Tuple, Optional
 from collections import deque
-from image_tools import im2single, im2single_GPU, im2gray_GPU, im2gray, polymask
+from image_tools import im2single, im2gray, polymask
 from multiprocessing import Process, Event, Pool, cpu_count
 from multiprocessing.sharedctypes import RawArray, Value
 import ctypes
@@ -11,8 +11,11 @@ from tqdm import tqdm
 import cv2
 from abc import ABC, abstractmethod
 from enum import Enum
-import cupy as cp
 import os
+
+from image_tools import im2single_GPU, im2gray_GPU
+import cupy as cp
+
 
 # NOTE: using GPU can be beneficial for large images, but detrimental for small ones 
 # TODO: make subtract_background(self, image: NDArray) convert images  
