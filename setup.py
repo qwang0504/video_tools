@@ -4,7 +4,7 @@ setup(
     name='video_tools',
     python_requires='>=3.8',
     author='Martin Privat',
-    version='0.3.8',
+    version='0.3.9',
     packages=['video_tools','video_tools.tests'],
     license='Creative Commons Attribution-Noncommercial-Share Alike license',
     description='simple video reader, writer, and processing functions',
@@ -17,6 +17,6 @@ setup(
         "qt_widgets @ git+https://github.com/ElTinmar/qt_widgets.git@main",
         "image_tools @ git+https://github.com/ElTinmar/image_tools.git@main",
         "tqdm",
-        "cupy-cuda12x"
+        "cupy"
     ]
 )
