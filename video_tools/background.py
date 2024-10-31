@@ -299,7 +299,112 @@ class StaticBackground(BackgroundSubtractor):
             image_sub = np.maximum(0, self.polarity.value*(image_single - self.background))
         return image_sub
 
+class StaticBackgroundChunked(BackgroundSubtractor):
+    '''
+    Use this if you already have the full video
+    and the background changes with time. 
+    '''
 
+    def __init__(
+            self,
+            video_reader: VideoSource, 
+            num_sample_frames: int = 500,
+            num_chunks: int = 5,
+            use_gpu: bool = False,
+            *args, **kwargs
+        ) -> None:
+
+        super().__init__(*args, **kwargs)
+        self.video_reader = video_reader
+        self.num_chunks = num_chunks
+        self.num_sample_frames = num_sample_frames
+        self.background = None
+        self.use_gpu = use_gpu
+        self.image_count = 0
+        self.height = 0
+        self.width = 0
+        self.numframes = 0
+
+    def initialize(self):
+        print('Static background')
+        print('Getting sample frames from video...')
+
+        self.height = self.video_reader.get_height()
+        self.width = self.video_reader.get_width()
+        self.numframes = self.video_reader.get_number_of_frame()
+
+        self.background = np.zeros((self.height, self.width, self.num_chunks), dtype=np.float32)
+
+        for chunk in range(self.num_chunks):
+            frame_collection = self.sample_frames_evenly(chunk)
+            print(f'Compute background for chunck {chunk}/{self.num_chunks}...')
+            self.background[:,:,chunk] = self.compute_background(frame_collection)
+
+        self.video_reader.reset_reader()
+        print('...done')
+
+        if self.use_gpu:
+            self.background_gpu = cp.asarray(self.background)
+        self.initialized = True
+
+    def sample_frames_evenly(self, chunk: int) -> NDArray:
+        '''
+        Sample frames evenly from the whole video and add to collection
+        '''
+        sample_indices = np.linspace(
+            int(chunk/self.num_chunks * self.numframes), 
+            int((chunk+1)/self.num_chunks * self.numframes)-1, 
+            self.num_sample_frames, 
+            dtype = np.int64
+        )
+
+        sample_frames = np.empty((self.height, self.width, self.num_sample_frames), dtype=np.float32)
+        for i,index in enumerate(tqdm(sample_indices)):
+            self.video_reader.seek_to(index)
+            rval, frame = self.video_reader.next_frame()
+            if rval:
+                sample_frames[:,:,i] = im2single(im2gray(frame))
+            else:
+                RuntimeError('StaticBackground::sample_frames_evenly frame not valid')
+        return sample_frames
+    
+    def compute_background(self, frame_collection: NDArray) -> None:
+        """
+        Take sample images from the video and return the mode for each pixel
+        Input:
+            sample_frames: m x n x k numpy.float32 array where k is the number of 
+            frames
+        Output:
+            background: m x n numpy.float32 array
+        """
+        return mode(frame_collection)
+
+    def get_background_image(self) -> Optional[NDArray]:
+
+        if self.initialized:
+            return np.mean(self.background, axis=2)
+        
+        else:
+            return None
+        
+    def subtract_background(self, image: NDArray) -> NDArray:
+
+        chunk = self.image_count // (self.numframes // self.num_chunks)
+
+        if self.use_gpu:
+            image_gpu = cp.asarray(image)
+            image_single_gpu = im2single_GPU(im2gray_GPU(image_gpu))
+            image_sub_gpu = cp.maximum(0, self.polarity.value*(image_single_gpu - self.background_gpu[:,:,chunk]))
+            image_sub = image_sub_gpu.get()
+
+        else:
+            image_single = im2single(im2gray(image))
+            image_sub = np.maximum(0, self.polarity.value*(image_single - self.background[:,:,chunk]))
+
+        self.image_count += 1
+
+        return image_sub
+        
 class DynamicBackground(BackgroundSubtractor):
     '''
     Use this if you want to extract background from a streaming source 
