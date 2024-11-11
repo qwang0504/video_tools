@@ -24,13 +24,19 @@ class VideoProcessor:
 
     def make_output_path(
             self, 
-            suffix: str, 
+            suffix: Optional[str], 
             dest_folder: Optional[str]
         ) -> None:
 
         if dest_folder is None:
             dest_folder = os.getcwd()
-        return os.path.join(dest_folder, f"{self.input_name}_{suffix}{self.input_format}")
+
+        if suffix is None:
+            res = os.path.join(dest_folder, f"{self.input_name}{self.input_format}")
+        else:
+            res = os.path.join(dest_folder, f"{self.input_name}_{suffix}{self.input_format}")
+
+        return res
     
     def get_input_video_metadata(self) -> None:
         # note that ffprobe doesn't show entries in the order specified in the command
@@ -53,7 +59,7 @@ class VideoProcessor:
             self, 
             start: str, 
             stop: str,
-            suffix: str = 'short', 
+            suffix: Optional[str] = 'short', 
             dest_folder: Optional[str] = None
         ) -> None:
 
@@ -72,7 +78,7 @@ class VideoProcessor:
     def split(
             self, 
             n: int,
-            suffix: str = 'split', 
+            suffix: Optional[str] = 'split', 
             dest_folder: Optional[str] = None
         ) -> None:
 
@@ -90,7 +96,7 @@ class VideoProcessor:
 
     def reindex(
             self,
-            suffix: str = 'reindexed', 
+            suffix: Optional[str] = 'reindexed', 
             dest_folder: Optional[str] = None
         ):
     
@@ -107,7 +113,7 @@ class VideoProcessor:
     def merge(
             self,
             file_list: List[str],
-            suffix: str = 'merged', 
+            suffix: Optional[str] = 'merged', 
             dest_folder: Optional[str] = None
         ):
         
@@ -158,7 +164,7 @@ class GPU_VideoProcessor(VideoProcessor):
             bottom: int, 
             width: int, 
             height: int,
-            suffix: str = 'cropped', 
+            suffix: Optional[str] = 'cropped', 
             dest_folder: Optional[str] = None
         ) -> None:
 
@@ -180,7 +186,7 @@ class GPU_VideoProcessor(VideoProcessor):
     def rescale(
             self, 
             scale: float,
-            suffix: str = 'scaled', 
+            suffix: Optional[str] = 'scaled', 
             dest_folder: Optional[str] = None
         ) -> None:
 
@@ -204,7 +210,7 @@ class GPU_VideoProcessor(VideoProcessor):
     def rotate(
             self, 
             angle_degrees: float,
-            suffix: str = 'rotated', 
+            suffix: Optional[str] = 'rotated', 
             dest_folder: Optional[str] = None
         ) -> None:
 
@@ -251,7 +257,7 @@ class CPU_VideoProcessor(VideoProcessor):
             bottom: int, 
             width: int, 
             height: int,
-            suffix: str = 'cropped', 
+            suffix: Optional[str] = 'cropped', 
             dest_folder: Optional[str] = None
         ) -> None:
 
@@ -273,7 +279,7 @@ class CPU_VideoProcessor(VideoProcessor):
     def rescale(
             self, 
             scale: float,
-            suffix: str = 'scaled', 
+            suffix: Optional[str] = 'scaled', 
             dest_folder: Optional[str] = None
         ) -> None:
 
@@ -297,7 +303,7 @@ class CPU_VideoProcessor(VideoProcessor):
     def rotate(
             self, 
             angle_degrees: float,
-            suffix: str = 'rotated', 
+            suffix: Optional[str] = 'rotated', 
             dest_folder: Optional[str] = None
         ) -> None:
 
