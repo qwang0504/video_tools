@@ -3,6 +3,7 @@ import os
 from typing import Optional, List
 import numpy as np
 import datetime
+import tempfile
 
 # Strongly inspired by DeepLabCut video functions :
 # https://github.com/DeepLabCut/DeepLabCut/blob/main/deeplabcut/utils/auxfun_videos.py
@@ -94,26 +95,21 @@ class VideoProcessor:
             dest_folder: Optional[str] = None
         ):
         
-        concat_file = '/tmp/concat.txt'
+        with tempfile.NamedTemporaryFile() as fd:
 
-        # write concat file
-        with open(concat_file,'w') as fd:
             for file in file_list:
                 fd.write(f"file {file}\n")
 
-        # call ffmpeg
-        output_path = self.make_output_path(suffix, dest_folder)
-        command = [
-            'ffmpeg', 
-            '-f', 'concat'
-            '-i', concat_file,
-            '-c', 'copy', 
-            f'{output_path}'
-        ]
-        subprocess.call(command)
-
-        # delete concat file
-        os.remove(concat_file)
+            # call ffmpeg
+            output_path = self.make_output_path(suffix, dest_folder)
+            command = [
+                'ffmpeg', 
+                '-f', 'concat'
+                '-i', fd.name,
+                '-c', 'copy', 
+                f'{output_path}'
+            ]
+            subprocess.call(command)
 
 class GPU_VideoProcessor(VideoProcessor):
     '''
