@@ -91,7 +91,7 @@ class VideoProcessor:
     def merge(
             self,
             file_list: List[str],
-            suffix: str = 'split', 
+            suffix: str = 'merged', 
             dest_folder: Optional[str] = None
         ):
         
