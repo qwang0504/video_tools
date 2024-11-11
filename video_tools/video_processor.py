@@ -88,6 +88,22 @@ class VideoProcessor:
                     dest_folder
                 )
 
+    def reindex(
+            self,
+            suffix: str = 'reindexed', 
+            dest_folder: Optional[str] = None
+        ):
+    
+        output_path = self.make_output_path(suffix, dest_folder)
+        command = [
+            'ffmpeg', 
+            '-i', f'{self.input_video_path}',
+            '-c', 'copy', 
+            '-fflags', '+genpts',
+            f'{output_path}'
+        ]
+        subprocess.call(command)
+
     def merge(
             self,
             file_list: List[str],
