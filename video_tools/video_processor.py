@@ -95,7 +95,7 @@ class VideoProcessor:
             dest_folder: Optional[str] = None
         ):
         
-        with tempfile.NamedTemporaryFile(mode='wt', delete_on_close=False) as fd:
+        with tempfile.NamedTemporaryFile(mode='wt', delete=False) as fd:
 
             for file in file_list:
                 fd.write(f"file {file}\n")
