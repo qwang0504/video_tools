@@ -1,6 +1,6 @@
 import subprocess
 import os
-from typing import Optional
+from typing import Optional, List
 import numpy as np
 import datetime
 
@@ -86,6 +86,34 @@ class VideoProcessor:
                     f"{suffix}_{n:03}",
                     dest_folder
                 )
+
+    def merge(
+            self,
+            file_list: List[str],
+            suffix: str = 'split', 
+            dest_folder: Optional[str] = None
+        ):
+        
+        concat_file = '/tmp/concat.txt'
+
+        # write concat file
+        with open(concat_file,'w') as fd:
+            for file in file_list:
+                fd.write(f"file {file}\n")
+
+        # call ffmpeg
+        output_path = self.make_output_path(suffix, dest_folder)
+        command = [
+            'ffmpeg', 
+            '-f', 'concat'
+            '-i', concat_file,
+            '-c', 'copy', 
+            f'{output_path}'
+        ]
+        subprocess.call(command)
+
+        # delete concat file
+        os.remove(concat_file)
 
 class GPU_VideoProcessor(VideoProcessor):
     '''
