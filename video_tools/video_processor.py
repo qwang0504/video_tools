@@ -97,6 +97,7 @@ class VideoProcessor:
         
         with tempfile.NamedTemporaryFile(mode='wt', delete=False) as fd:
 
+            fd.write('ffconcat version 1.0\n')
             for file in file_list:
                 fd.write(f"file {file}\n")
             fd.close()
@@ -108,6 +109,7 @@ class VideoProcessor:
             command = [
                 'ffmpeg', 
                 '-f', 'concat',
+                '-safe', '0',
                 '-i', fd.name,
                 '-c', 'copy', 
                 f'{output_path}'
