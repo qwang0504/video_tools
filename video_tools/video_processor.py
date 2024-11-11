@@ -100,6 +100,8 @@ class VideoProcessor:
             for file in file_list:
                 fd.write(f"file {file}\n")
 
+            os.system(f"cat {fd.name}")
+            
             # call ffmpeg
             output_path = self.make_output_path(suffix, dest_folder)
             command = [
