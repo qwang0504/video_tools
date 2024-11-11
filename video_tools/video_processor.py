@@ -95,10 +95,11 @@ class VideoProcessor:
             dest_folder: Optional[str] = None
         ):
         
-        with tempfile.NamedTemporaryFile(mode='wt') as fd:
+        with tempfile.NamedTemporaryFile(mode='wt', delete_on_close=False) as fd:
 
             for file in file_list:
                 fd.write(f"file {file}\n")
+            fd.close()
 
             os.system(f"cat {fd.name}")
             
