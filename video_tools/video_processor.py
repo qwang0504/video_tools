@@ -104,7 +104,7 @@ class VideoProcessor:
             output_path = self.make_output_path(suffix, dest_folder)
             command = [
                 'ffmpeg', 
-                '-f', 'concat'
+                '-f', 'concat',
                 '-i', fd.name,
                 '-c', 'copy', 
                 f'{output_path}'
