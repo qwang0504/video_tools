@@ -12,6 +12,7 @@ import cv2
 from abc import ABC, abstractmethod
 from enum import Enum
 import os
+from functools import partial
 
 from image_tools import im2single_GPU, im2gray_GPU
 import cupy as cp
@@ -20,10 +21,10 @@ import cupy as cp
 # NOTE: using GPU can be beneficial for large images, but detrimental for small ones 
 # TODO: make subtract_background(self, image: NDArray) convert images  
 
-def my_mode(x: NDArray) -> NDArray:
+def mode(x: NDArray) -> NDArray:
     return stats.mode(x, axis=2, keepdims=False).mode
 
-def mode(arr: NDArray, num_processes: int = cpu_count()):
+def mode_multiprocessed(arr: NDArray, num_processes: int = cpu_count()):
     '''
     multiprocess computation of mode along 3rd axis
     '''
@@ -34,7 +35,7 @@ def mode(arr: NDArray, num_processes: int = cpu_count()):
 
     # distribute work
     with Pool(processes=num_processes) as pool:
-        res = pool.map(my_mode, chunks)
+        res = pool.map(mode, chunks)
 
     # reshape result
     out = np.vstack(res)
@@ -52,10 +53,27 @@ class Polarity(Enum):
 
 class BackgroundSubtractor(ABC):
 
-    def __init__(self, polarity: Polarity = Polarity.BRIGHT_ON_DARK) -> None:
+    background_method = {
+        'mode': mode,
+        'mode_multiprocessed': mode_multiprocessed,
+        'mean': partial(np.mean(axis=2)),
+        'median': partial(np.median(axis=2)),
+    }
+
+    def __init__(
+            self, 
+            polarity: Polarity = Polarity.BRIGHT_ON_DARK, 
+            method: str = 'mode_multiprocessed'
+        ) -> None:
+
         super().__init__()
         self.initialized = False
         self.polarity = polarity
+        try:
+            self.background_algortihm = self.background_method[method]
+        except KeyError:
+            raise ValueError(f"Valid methods are {', '.join(self.background_method.keys())}")
+        
     
     @abstractmethod
     def initialize(self) -> None:
@@ -268,7 +286,7 @@ class StaticBackground(BackgroundSubtractor):
         Output:
             background: m x n numpy.float32 array
         """
-        self.background = mode(frame_collection)
+        self.background = self.background_algortihm(frame_collection)
 
     def initialize(self):
         print('Static background')
@@ -377,7 +395,7 @@ class StaticBackgroundChunked(BackgroundSubtractor):
         Output:
             background: m x n numpy.float32 array
         """
-        return mode(frame_collection)
+        return self.background_algortihm(frame_collection)
 
     def get_background_image(self) -> Optional[NDArray]:
 
@@ -428,7 +446,7 @@ class DynamicBackground(BackgroundSubtractor):
 
     def compute_background(self):
         frames = np.asarray(self.frame_collection).transpose((1,2,0))
-        self.background = mode(frames)
+        self.background = self.background_algortihm(frames)
 
     def subtract_background(self, image: NDArray) -> NDArray: 
         if self.curr_image % self.sample_every_n_frames == 0:
@@ -510,8 +528,8 @@ class DynamicBackgroundMP(BackgroundSubtractor):
         self.stop_flag.set()
         self.proc_compute.join()
 
-    @staticmethod
     def compute_background(
+        self,
         stop_flag: Event, 
         image_store: BoundedQueue, 
         background: RawArray
@@ -520,7 +538,7 @@ class DynamicBackgroundMP(BackgroundSubtractor):
         while not stop_flag.is_set():
             data = image_store.get_data().transpose((1,2,0))
             if data is not None:
-                bckg_img = mode(data)
+                bckg_img = self.background_algortihm(data)
                 background[:] = bckg_img.flatten()
 
     def get_background(self) -> NDArray:
