@@ -56,8 +56,8 @@ class BackgroundSubtractor(ABC):
     background_method = {
         'mode': mode,
         'mode_multiprocessed': mode_multiprocessed,
-        'mean': partial(np.mean(axis=2)),
-        'median': partial(np.median(axis=2)),
+        'mean': partial(np.mean, axis=2),
+        'median': partial(np.median, axis=2),
     }
 
     def __init__(
