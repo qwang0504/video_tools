@@ -8,6 +8,9 @@ from abc import abstractmethod, ABC
 # Strongly inspired by DeepLabCut video functions :
 # https://github.com/DeepLabCut/DeepLabCut/blob/main/deeplabcut/utils/auxfun_videos.py
 
+# GENERAL NOTE: Since compressed video formats use temporal information to achieve 
+# good compression (keyframes), splitting or merging videos is not entirely straightforward.
+# Re-encoding the videos ensure consistent output and a re-definition of keyframes
 
 class VideoProcessor(ABC):
     '''
@@ -63,9 +66,6 @@ class VideoProcessor(ABC):
             suffix: Optional[str] = 'short', 
             dest_folder: Optional[str] = None
         ) -> None:
-        # unfortunately, shorten needs to re-encode the video, otherwise
-        # if -ss is not exactly on a keyframe, you can end up with black,
-        # or duplicated frames
         pass
 
     @abstractmethod
