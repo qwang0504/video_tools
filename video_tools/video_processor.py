@@ -69,6 +69,16 @@ class VideoProcessor(ABC):
         pass
 
     @abstractmethod
+    def shorten_frame(
+            self, 
+            frame_start_inclusive: int, 
+            frame_stop_inclusive: int,
+            suffix: Optional[str] = 'short', 
+            dest_folder: Optional[str] = None
+        ) -> None:
+        pass
+
+    @abstractmethod
     def merge(
             self,
             file_list: List[str],
@@ -129,6 +139,7 @@ class VideoProcessor(ABC):
             suffix: Optional[str] = 'split', 
             dest_folder: Optional[str] = None
         ) -> None:
+        '''split based on time'''
 
         width, height, fps, num_frames, duration = self.get_input_video_metadata()
         chunk_dur = duration / n
@@ -141,7 +152,26 @@ class VideoProcessor(ABC):
                     f"{suffix}_{n:03}",
                     dest_folder
                 )
-                
+
+    def split_frame(
+            self, 
+            n: int,
+            suffix: Optional[str] = 'split', 
+            dest_folder: Optional[str] = None
+        ) -> None:
+        '''split based on frames using filter'''
+
+        width, height, fps, num_frames, duration = self.get_input_video_metadata()
+        chunk_starts = np.linspace(0, num_frames, n+1, dtype=int)
+        chunks =  [(chunk_starts[i], chunk_starts[i+1] - 1) for i in range(n)]
+        for n, (start, end) in enumerate(chunks, start=1):
+            self.shorten_frame(
+                    start,
+                    end,
+                    f"{suffix}_{n:03}",
+                    dest_folder
+                )
+            
 class GPU_VideoProcessor(VideoProcessor):
     '''
     Use the h264 or h265 codec with NVIDIA GPU harware acceleration   
@@ -242,6 +272,27 @@ class GPU_VideoProcessor(VideoProcessor):
             '-ss', f'{start}',
             '-i', f'{self.input_video_path}',
             '-to', f'{stop}',
+            '-c:v', self.codec, 
+            '-cq', f'{self.quality}',
+            '-profile:v', self.profile, 
+            '-preset', self.preset,
+            f'{output_path}'
+        ]
+        subprocess.call(command)
+
+    def shorten_frame(
+            self, 
+            frame_start_inclusive: int, 
+            frame_stop_inclusive: int,
+            suffix: Optional[str] = 'short', 
+            dest_folder: Optional[str] = None
+        ) -> None:
+
+        output_path = self.make_output_path(suffix, dest_folder)
+        command = [
+            'ffmpeg', '-n', 
+            '-i', f'{self.input_video_path}',
+            '-filter:v', f'select=between(n, {frame_start_inclusive}, {frame_stop_inclusive})',
             '-c:v', self.codec, 
             '-cq', f'{self.quality}',
             '-profile:v', self.profile, 
@@ -378,9 +429,29 @@ class CPU_VideoProcessor(VideoProcessor):
         output_path = self.make_output_path(suffix, dest_folder)
         command = [
             'ffmpeg', '-n', 
-            '-i', f'{self.input_video_path}',
             '-ss', f'{start}',
+            '-i', f'{self.input_video_path}',
             '-to', f'{stop}',
+            '-c:v', self.codec, 
+            '-crf', f'{self.quality}',
+            '-profile:v', self.profile, 
+            '-preset',  self.preset,
+            f'{output_path}'
+        ]
+        subprocess.call(command)
+
+    def shorten_frame(
+            self, 
+            frame_start_inclusive: int, 
+            frame_stop_inclusive: int,
+            suffix: Optional[str] = 'short', 
+            dest_folder: Optional[str] = None
+        ) -> None:
+        output_path = self.make_output_path(suffix, dest_folder)
+        command = [
+            'ffmpeg', '-n', 
+            '-i', f'{self.input_video_path}',
+            '-filter:v', f'select=between(n, {frame_start_inclusive}, {frame_stop_inclusive})',
             '-c:v', self.codec, 
             '-crf', f'{self.quality}',
             '-profile:v', self.profile, 
