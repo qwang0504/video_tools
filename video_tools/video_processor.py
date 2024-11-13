@@ -12,6 +12,10 @@ from abc import abstractmethod, ABC
 # good compression (keyframes), splitting or merging videos is not entirely straightforward.
 # Re-encoding the videos ensure consistent output and a re-definition of keyframes
 
+# TODO: it may be smarter to chain filters, e.g. crop then split in one operation, and then 
+# apply all the operations at once. Something like VideoProcessor.crop().split().encode()
+# it might also lead to less code duplication
+
 class VideoProcessor(ABC):
     '''
     split, shorten, crop, resize videos using ffmpeg
