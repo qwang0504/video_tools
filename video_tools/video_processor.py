@@ -292,7 +292,7 @@ class GPU_VideoProcessor(VideoProcessor):
         command = [
             'ffmpeg', '-n', 
             '-i', f'{self.input_video_path}',
-            '-filter:v', f"select='between(n, {frame_start_inclusive}, {frame_stop_inclusive})'",
+            '-filter:v', f"select='between(n, {frame_start_inclusive}, {frame_stop_inclusive})', setpts=PTS-STARTPTS",
             '-c:v', self.codec, 
             '-cq', f'{self.quality}',
             '-profile:v', self.profile, 
@@ -451,7 +451,7 @@ class CPU_VideoProcessor(VideoProcessor):
         command = [
             'ffmpeg', '-n', 
             '-i', f'{self.input_video_path}',
-            '-filter:v', f"select='between(n, {frame_start_inclusive}, {frame_stop_inclusive})'",
+            '-filter:v', f"select='between(n, {frame_start_inclusive}, {frame_stop_inclusive})', setpts=PTS-STARTPTS",
             '-c:v', self.codec, 
             '-crf', f'{self.quality}',
             '-profile:v', self.profile, 
