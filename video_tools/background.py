@@ -13,7 +13,6 @@ from abc import ABC, abstractmethod
 from enum import Enum
 import os
 from functools import partial
-from image_tools import im2single_GPU, im2gray_GPU
 
 # NOTE: using GPU can be beneficial for large images, but detrimental for small ones 
 # TODO: make subtract_background(self, image: NDArray) convert images  
