@@ -5,9 +5,6 @@ import numpy as np
 from abc import ABC
 
 # TODO maybe add a multiprocessing queue
-# TODO I suggest trying MJPEG with mp4. MJPEG uses only intraframe compression 
-# which results in faster encoding speed with larger file size. MP4 supposedly
-# has good indexing, making it suitable for random reads
 
 class VideoWriter(ABC):
     def write_frame(self, image: NDArray) -> None:
@@ -108,6 +105,9 @@ class FFMPEG_VideoWriter_GPU(FFMPEG_VideoWriter):
             if not preset in self.SUPPORTED_PRESETS:
                 raise ValueError(f'wrong preset, supported preset are: {self.SUPPORTED_PRESETS}') 
 
+            if not (0 <= q <= 51):
+                raise ValueError(f'q should be between 0 and 51') 
+            
             ffmpeg_cmd_options = [
                 "-profile:v", profile,
                 "-preset", preset, 
@@ -171,17 +171,30 @@ class FFMPEG_VideoWriter_CPU(FFMPEG_VideoWriter):
             if not preset in self.SUPPORTED_PRESETS:
                 raise ValueError(f'wrong preset, supported preset are: {self.SUPPORTED_PRESETS}') 
 
+            if (codec == 'h264'):
+                if not (-12 <= q <= 51):
+                    raise ValueError(f'q should be between -12 and 51, default 23') 
+                
+            elif (codec == 'hevc'):
+                if not (0 <= q <= 51):
+                    raise ValueError(f'q should be between 0 and 51, default 28') 
+
             ffmpeg_cmd_options = [
                 "-profile:v", profile,
                 "-preset", preset, 
                 "-crf", str(q),
                 "-pix_fmt", "yuv420p",  # Pixel format (required for compatibility)
             ]
+
         elif codec == 'mjpeg':
+            if not (2 <= q <= 31):
+                raise ValueError(f'q should be between 2 and 31, default 5')
+            
             ffmpeg_cmd_options = [
                 "-q:v", str(q),
                 "-pix_fmt", "yuvj420p",  # Full-range YUV
             ]
+
         else:
             pass
 
