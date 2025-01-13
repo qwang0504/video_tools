@@ -120,7 +120,7 @@ class FFMPEG_VideoWriter_GPU(FFMPEG_VideoWriter):
             pass
 
         ffmpeg_cmd = ffmpeg_cmd_prefix + ffmpeg_cmd_options + ffmpeg_cmd_suffix
-        self.ffmpeg_process = subprocess.Popen(ffmpeg_cmd, bufsize=6291456, stdin=subprocess.PIPE)
+        self.ffmpeg_process = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
         
 # video writer ffmpeg
 class FFMPEG_VideoWriter_CPU(FFMPEG_VideoWriter):
@@ -201,6 +201,6 @@ class FFMPEG_VideoWriter_CPU(FFMPEG_VideoWriter):
             pass
 
         ffmpeg_cmd = ffmpeg_cmd_prefix + ffmpeg_cmd_options + ffmpeg_cmd_suffix
-        self.ffmpeg_process = subprocess.Popen(ffmpeg_cmd, bufsize=6291456, stdin=subprocess.PIPE)
+        self.ffmpeg_process = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
 
         
