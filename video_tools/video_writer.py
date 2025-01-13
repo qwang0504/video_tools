@@ -75,7 +75,7 @@ class FFMPEG_VideoWriter_GPU(FFMPEG_VideoWriter):
             width: int, 
             fps: int = 25, 
             q: int = 23,
-            filename: str = 'output.avi',
+            filename: str = 'output.mp4',
             codec: str = 'h264_nvenc',
             profile: str = 'main',
             preset: str = 'p2'
@@ -138,7 +138,7 @@ class FFMPEG_VideoWriter_CPU(FFMPEG_VideoWriter):
             width: int, 
             fps: int = 25, 
             q: int = 23,
-            filename: str = 'output.avi',
+            filename: str = 'output.mp4',
             codec: str = 'h264',
             profile: str = 'main',
             preset: str = 'veryfast'
