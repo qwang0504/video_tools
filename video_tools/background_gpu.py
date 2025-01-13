@@ -13,10 +13,12 @@ from abc import ABC, abstractmethod
 from enum import Enum
 import os
 from functools import partial
+from image_tools import im2single_GPU, im2gray_GPU
+import cupy as cp
+
 
 # NOTE: using GPU can be beneficial for large images, but detrimental for small ones 
 # TODO: make subtract_background(self, image: NDArray) convert images  
-# TODO clean the use_gpu situation
 
 def mode(x: NDArray) -> NDArray:
     return stats.mode(x, axis=2, keepdims=False).mode
@@ -158,7 +160,10 @@ class BackroundImage(BackgroundSubtractor):
         else:
             raise ValueError(f'{self.image_file_name} image type unknown')
         
-        self.background = im2single(im2gray(image))     
+        self.background = im2single(im2gray(image)) 
+        if self.use_gpu:
+            self.background_gpu = cp.asarray(self.background)
+        
         self.initialized = True
     
     def get_background_image(self) -> Optional[NDArray]:
@@ -168,8 +173,14 @@ class BackroundImage(BackgroundSubtractor):
             return None
 
     def subtract_background(self, image: NDArray) -> NDArray:
-        image_single = im2single(im2gray(image))
-        image_sub = np.maximum(0, self.polarity.value*(image_single - self.background))
+        if self.use_gpu:
+            image_gpu = cp.asarray(image)
+            image_single_gpu = im2single_GPU(im2gray_GPU(image_gpu))
+            image_sub_gpu = cp.maximum(0, self.polarity.value*(image_single_gpu - self.background_gpu))
+            image_sub = image_sub_gpu.get()
+        else:
+            image_single = im2single(im2gray(image))
+            image_sub = np.maximum(0, self.polarity.value*(image_single - self.background))
         return image_sub
 
 class InpaintBackground(BackgroundSubtractor):
@@ -198,6 +209,8 @@ class InpaintBackground(BackgroundSubtractor):
         img = self.get_frame()
         mask = polymask(img)
         self.background = cv2.inpaint(img, mask, self.inpaint_radius, self.algo)
+        if self.use_gpu:
+            self.background_gpu = cp.asarray(self.background)
         self.initialized = True
 
     def get_frame(self):
@@ -216,8 +229,14 @@ class InpaintBackground(BackgroundSubtractor):
             return None
 
     def subtract_background(self, image: NDArray) -> NDArray:
-        image_single = im2single(im2gray(image))
-        image_sub = np.maximum(0, self.polarity.value*(image_single - self.background))
+        if self.use_gpu:
+            image_gpu = cp.asarray(image)
+            image_single_gpu = im2single_GPU(im2gray_GPU(image_gpu))
+            image_sub_gpu = cp.maximum(0, self.polarity.value*(image_single_gpu - self.background_gpu))
+            image_sub = image_sub_gpu.get()
+        else:
+            image_single = im2single(im2gray(image))
+            image_sub = np.maximum(0, self.polarity.value*(image_single - self.background))
         return image_sub
     
 
@@ -276,6 +295,8 @@ class StaticBackground(BackgroundSubtractor):
         self.compute_background(frame_collection)
         self.video_reader.reset_reader()
         print('...done')
+        if self.use_gpu:
+            self.background_gpu = cp.asarray(self.background)
         self.initialized = True
 
     def get_background_image(self) -> Optional[NDArray]:
@@ -285,8 +306,14 @@ class StaticBackground(BackgroundSubtractor):
             return None
 
     def subtract_background(self, image: NDArray) -> NDArray:
-        image_single = im2single(im2gray(image))
-        image_sub = np.maximum(0, self.polarity.value*(image_single - self.background))
+        if self.use_gpu:
+            image_gpu = cp.asarray(image)
+            image_single_gpu = im2single_GPU(im2gray_GPU(image_gpu))
+            image_sub_gpu = cp.maximum(0, self.polarity.value*(image_single_gpu - self.background_gpu))
+            image_sub = image_sub_gpu.get()
+        else:
+            image_single = im2single(im2gray(image))
+            image_sub = np.maximum(0, self.polarity.value*(image_single - self.background))
         return image_sub
 
 class StaticBackgroundChunked(BackgroundSubtractor):
@@ -332,6 +359,9 @@ class StaticBackgroundChunked(BackgroundSubtractor):
 
         self.video_reader.reset_reader()
         print('...done')
+
+        if self.use_gpu:
+            self.background_gpu = cp.asarray(self.background)
         self.initialized = True
 
     def sample_frames_evenly(self, chunk: int) -> NDArray:
@@ -377,9 +407,19 @@ class StaticBackgroundChunked(BackgroundSubtractor):
     def subtract_background(self, image: NDArray) -> NDArray:
 
         chunk = self.image_count // (self.numframes // self.num_chunks)
-        image_single = im2single(im2gray(image))
-        image_sub = np.maximum(0, self.polarity.value*(image_single - self.background[:,:,chunk]))
+
+        if self.use_gpu:
+            image_gpu = cp.asarray(image)
+            image_single_gpu = im2single_GPU(im2gray_GPU(image_gpu))
+            image_sub_gpu = cp.maximum(0, self.polarity.value*(image_single_gpu - self.background_gpu[:,:,chunk]))
+            image_sub = image_sub_gpu.get()
+
+        else:
+            image_single = im2single(im2gray(image))
+            image_sub = np.maximum(0, self.polarity.value*(image_single - self.background[:,:,chunk]))
+
         self.image_count += 1
+
         return image_sub
         
 class DynamicBackground(BackgroundSubtractor):

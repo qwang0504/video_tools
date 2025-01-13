@@ -5,6 +5,9 @@ import numpy as np
 from abc import ABC
 
 # TODO maybe add a multiprocessing queue
+# TODO I suggest trying MJPEG with mp4. MJPEG uses only intraframe compression 
+# which results in faster encoding speed with larger file size. MP4 supposedly
+# has good indexing, making it suitable for random reads
 
 class VideoWriter(ABC):
     def write_frame(self, image: NDArray) -> None:
