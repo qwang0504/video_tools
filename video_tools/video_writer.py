@@ -62,6 +62,10 @@ class FFMPEG_VideoWriter_GPU(FFMPEG_VideoWriter):
     # To check which profiles and presets are available for a given encoder use:
     # ffmpeg -h encoder=h264_nvenc
 
+    SUPPORTED_VIDEO_CODECS = ['h264_nvenc', 'hevc_nvenc']
+    SUPPORTED_PRESETS = ['p1','p2','p3','p4','p5','p6','p7']
+    SUPPORTED_PROFILES = ['main']
+
     def __init__(
             self, 
             height: int, 
@@ -70,11 +74,14 @@ class FFMPEG_VideoWriter_GPU(FFMPEG_VideoWriter):
             q: int = 23,
             filename: str = 'output.avi',
             codec: str = 'h264_nvenc',
-            profile: str = 'baseline',
+            profile: str = 'main',
             preset: str = 'p2'
         ) -> None:
-        
-        ffmpeg_cmd = [
+
+        if not codec in self.SUPPORTED_VIDEO_CODECS:
+            raise ValueError(f'wrong video_codec type, supported codecs are: {self.SUPPORTED_VIDEO_CODECS}') 
+
+        ffmpeg_cmd_prefix = [
             "ffmpeg",
             "-hide_banner", 
             "-loglevel", "error",
@@ -84,13 +91,32 @@ class FFMPEG_VideoWriter_GPU(FFMPEG_VideoWriter):
             "-r", str(fps),  # Frames per second
             "-s", f"{width}x{height}",  # Specify image size
             "-i", "-",  # Input from pipe
-            "-c:v", codec, 
-            "-profile:v", profile,
-            "-preset", preset, 
-            "-cq:v", str(q),
+            "-c:v", codec 
+        ]
+
+        ffmpeg_cmd_suffix = [
             "-pix_fmt", "yuv420p",  # Pixel format (required for compatibility)
             filename,
         ]
+        
+        ffmpeg_cmd_options = []
+        if (codec == 'h264_nvenc') or (codec == 'hevc_nvenc'):
+
+            if not profile in self.SUPPORTED_PROFILES:
+                raise ValueError(f'wrong profile, supported profile are: {self.SUPPORTED_PROFILES}') 
+
+            if not preset in self.SUPPORTED_PRESETS:
+                raise ValueError(f'wrong preset, supported preset are: {self.SUPPORTED_PRESETS}') 
+
+            ffmpeg_cmd_options = [
+                "-profile:v", profile,
+                "-preset", preset, 
+                "-cq:v", str(q),
+            ]
+        else:
+            pass
+
+        ffmpeg_cmd = ffmpeg_cmd_prefix + ffmpeg_cmd_options + ffmpeg_cmd_suffix
         self.ffmpeg_process = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
         
 # video writer ffmpeg
@@ -101,6 +127,10 @@ class FFMPEG_VideoWriter_CPU(FFMPEG_VideoWriter):
     # To check which profiles and presets are available for a given encoder use:
     # ffmpeg -h encoder=h264
 
+    SUPPORTED_VIDEO_CODECS = ['h264', 'hevc', 'mjpeg']
+    SUPPORTED_PRESETS = ['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
+    SUPPORTED_PROFILES = ['main']
+
     def __init__(
             self, 
             height: int, 
@@ -109,11 +139,14 @@ class FFMPEG_VideoWriter_CPU(FFMPEG_VideoWriter):
             q: int = 23,
             filename: str = 'output.avi',
             codec: str = 'h264',
-            profile: str = 'baseline',
+            profile: str = 'main',
             preset: str = 'veryfast'
         ) -> None:
+
+        if not codec in self.SUPPORTED_VIDEO_CODECS:
+            raise ValueError(f'wrong codec, supported codecs are: {self.SUPPORTED_VIDEO_CODECS}') 
         
-        ffmpeg_cmd = [
+        ffmpeg_cmd_prefix = [
             "ffmpeg",
             "-hide_banner", 
             "-loglevel", "error",
@@ -123,13 +156,32 @@ class FFMPEG_VideoWriter_CPU(FFMPEG_VideoWriter):
             "-r", str(fps),  # Frames per second
             "-s", f"{width}x{height}",  # Specify image size
             "-i", "-",  # Input from pipe
-            "-c:v", codec, 
-            "-profile:v", profile,
-            "-preset", preset, 
-            "-crf", str(q),
+            "-c:v", codec 
+        ]
+
+        ffmpeg_cmd_suffix = [
             "-pix_fmt", "yuv420p",  # Pixel format (required for compatibility)
             filename,
         ]
+
+        ffmpeg_cmd_options = []
+        if (codec == 'h264') or (codec == 'hevc'):
+
+            if not profile in self.SUPPORTED_PROFILES:
+                raise ValueError(f'wrong profile, supported profile are: {self.SUPPORTED_PROFILES}') 
+
+            if not preset in self.SUPPORTED_PRESETS:
+                raise ValueError(f'wrong preset, supported preset are: {self.SUPPORTED_PRESETS}') 
+
+            ffmpeg_cmd_options = [
+                "-profile:v", profile,
+                "-preset", preset, 
+                "-crf", str(q),
+            ]
+        else:
+            pass
+
+        ffmpeg_cmd = ffmpeg_cmd_prefix + ffmpeg_cmd_options + ffmpeg_cmd_suffix
         self.ffmpeg_process = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
 
         
