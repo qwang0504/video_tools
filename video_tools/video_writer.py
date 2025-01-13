@@ -89,7 +89,7 @@ class FFMPEG_VideoWriter_GPU(FFMPEG_VideoWriter):
             "-loglevel", "error",
             "-y",  # Overwrite output file if it exists
             "-f", "rawvideo",
-            "-pix_fmt", "yuv420",
+            "-pix_fmt", "yuv420p",
             "-r", str(fps),  # Frames per second
             "-s", f"{width}x{height}",  # Specify image size
             "-i", "-",  # Input from pipe
@@ -155,7 +155,7 @@ class FFMPEG_VideoWriter_CPU(FFMPEG_VideoWriter):
             "-loglevel", "error",
             "-y",  # Overwrite output file if it exists
             "-f", "rawvideo",
-            "-pix_fmt", "yuv420",
+            "-pix_fmt", "yuv420p",
             "-r", str(fps),  # Frames per second
             "-s", f"{width}x{height}",  # Specify image size
             "-i", "-",  # Input from pipe
