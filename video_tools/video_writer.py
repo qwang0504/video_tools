@@ -179,6 +179,7 @@ class FFMPEG_VideoWriter_CPU(FFMPEG_VideoWriter):
             ]
         elif codec == 'mjpeg':
             ffmpeg_cmd_options = [
+                "-q:v", str(q),
                 "-pix_fmt", "yuvj420p",  # Full-range YUV
             ]
         else:
