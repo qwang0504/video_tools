@@ -97,10 +97,7 @@ class FFMPEG_VideoWriter_GPU(FFMPEG_VideoWriter):
             "-c:v", codec 
         ]
 
-        ffmpeg_cmd_suffix = [
-            "-pix_fmt", "yuv420p",  # Pixel format (required for compatibility)
-            filename,
-        ]
+        ffmpeg_cmd_suffix = [filename]
         
         ffmpeg_cmd_options = []
         if (codec == 'h264_nvenc') or (codec == 'hevc_nvenc'):
@@ -115,6 +112,7 @@ class FFMPEG_VideoWriter_GPU(FFMPEG_VideoWriter):
                 "-profile:v", profile,
                 "-preset", preset, 
                 "-cq:v", str(q),
+                "-pix_fmt", "yuv420p",  # Pixel format (required for compatibility)
             ]
         else:
             pass
@@ -162,10 +160,7 @@ class FFMPEG_VideoWriter_CPU(FFMPEG_VideoWriter):
             "-c:v", codec 
         ]
 
-        ffmpeg_cmd_suffix = [
-            "-pix_fmt", "yuv420p",  # Pixel format (required for compatibility)
-            filename,
-        ]
+        ffmpeg_cmd_suffix = [filename]
 
         ffmpeg_cmd_options = []
         if (codec == 'h264') or (codec == 'hevc'):
@@ -180,6 +175,11 @@ class FFMPEG_VideoWriter_CPU(FFMPEG_VideoWriter):
                 "-profile:v", profile,
                 "-preset", preset, 
                 "-crf", str(q),
+                "-pix_fmt", "yuv420p",  # Pixel format (required for compatibility)
+            ]
+        elif codec == 'mjpeg':
+            ffmpeg_cmd_options = [
+                "-pix_fmt", "yuvj420p",  # Full-range YUV
             ]
         else:
             pass
