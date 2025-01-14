@@ -111,7 +111,7 @@ class FFMPEG_VideoWriter_GPU(VideoWriter):
         # requires RGB images
         if len(image.shape) == 2:
             image = np.dstack((image,image,image))
-        image_yuv420 = cv2.cvtColor(image, cv2.COLOR_RGB2YUV_I420)
+        image_yuv420 = cv2.cvtColor(image, cv2.COLOR_RGB2YUV_I420) # better than writing full fat RGB to the pipe
         self.ffmpeg_process.stdin.write(image_yuv420.tobytes())
 
     def close(self) -> None:
@@ -203,7 +203,7 @@ class FFMPEG_VideoWriter_CPU(VideoWriter):
         # requires RGB images
         if len(image.shape) == 2:
             image = np.dstack((image,image,image))
-        image_yuv420 = cv2.cvtColor(image, cv2.COLOR_RGB2YUV_I420)
+        image_yuv420 = cv2.cvtColor(image, cv2.COLOR_RGB2YUV_I420) # better than writing full fat RGB to the pipe
         self.ffmpeg_process.stdin.write(image_yuv420.tobytes())
 
     def close(self) -> None:
@@ -277,6 +277,8 @@ class FFMPEG_VideoWriter_CPU_Grayscale(VideoWriter):
         
     def write_frame(self, image: NDArray) -> None:
         # requires grayscale images
+        if len(image.shape) == 3:
+            image = image[:,:,0]
         self.ffmpeg_process.stdin.write(image.tobytes())
 
     def close(self) -> None:
