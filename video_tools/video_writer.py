@@ -109,10 +109,14 @@ class FFMPEG_VideoWriter_GPU(VideoWriter):
         self.ffmpeg_process = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
     
     def write_frame(self, image: NDArray) -> None:
-        # requires RGB images
+        # accepts grayscale or RGB images
+
+        # converts to yuv420p before sending through the pipe
+        # (faster than writing full fat RGB to the pipe)
         if len(image.shape) == 2:
             image = np.dstack((image,image,image))
-        image_yuv420 = cv2.cvtColor(image, cv2.COLOR_RGB2YUV_I420) # better than writing full fat RGB to the pipe
+        image_yuv420 = cv2.cvtColor(image, cv2.COLOR_RGB2YUV_I420) 
+
         self.ffmpeg_process.stdin.write(image_yuv420.tobytes())
 
     def close(self) -> None:
@@ -202,10 +206,14 @@ class FFMPEG_VideoWriter_CPU(VideoWriter):
         self.ffmpeg_process = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
 
     def write_frame(self, image: NDArray) -> None:
-        # requires RGB images
+        # accepts grayscale or RGB images
+
+        # converts to yuv420p before sending through the pipe
+        # (faster than writing full fat RGB to the pipe)
         if len(image.shape) == 2:
             image = np.dstack((image,image,image))
-        image_yuv420 = cv2.cvtColor(image, cv2.COLOR_RGB2YUV_I420) # better than writing full fat RGB to the pipe
+        image_yuv420 = cv2.cvtColor(image, cv2.COLOR_RGB2YUV_I420) 
+
         self.ffmpeg_process.stdin.write(image_yuv420.tobytes())
 
     def close(self) -> None:
@@ -214,6 +222,7 @@ class FFMPEG_VideoWriter_CPU(VideoWriter):
         self.ffmpeg_process.wait()
 
 class FFMPEG_VideoWriter_CPU_Grayscale(FFMPEG_VideoWriter_CPU):
+    # Write grayscale directly for max throughput. Only supported by 'h264' codec with profile 'high'.
 
     SUPPORTED_VIDEO_CODECS = ['h264']
     SUPPORTED_PRESETS = ['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
@@ -227,13 +236,13 @@ class FFMPEG_VideoWriter_CPU_Grayscale(FFMPEG_VideoWriter_CPU):
         self.ffmpeg_process.stdin.write(image.tobytes())
 
 class FFMPEG_VideoWriter_CPU_YUV420P(FFMPEG_VideoWriter_CPU):
+    # Stripped down version for max througput. Expects YUV420P input
 
-    def write_frame(self, image: NDArray) -> None:
-        # requires yuv420p images
-        self.ffmpeg_process.stdin.write(image.tobytes())
+    def write_frame(self, image_yuv420p: NDArray) -> None:
+        self.ffmpeg_process.stdin.write(image_yuv420p.tobytes())
 
 class FFMPEG_VideoWriter_GPU_YUV420P(FFMPEG_VideoWriter_GPU):
+    # Stripped down version for max througput. Expects YUV420P input
 
-    def write_frame(self, image: NDArray) -> None:
-        # requires yuv420p images
-        self.ffmpeg_process.stdin.write(image.tobytes())
+    def write_frame(self, image_yuv420p: NDArray) -> None:
+        self.ffmpeg_process.stdin.write(image_yuv420p.tobytes())
