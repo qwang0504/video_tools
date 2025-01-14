@@ -52,6 +52,7 @@ class FFMPEG_VideoWriter_GPU(VideoWriter):
     SUPPORTED_VIDEO_CODECS = ['h264_nvenc', 'hevc_nvenc']
     SUPPORTED_PRESETS = ['p1','p2','p3','p4','p5','p6','p7']
     SUPPORTED_PROFILES = ['main']
+    PIX_FMT = 'yuv420p'
 
     def __init__(
             self, 
@@ -74,7 +75,7 @@ class FFMPEG_VideoWriter_GPU(VideoWriter):
             "-loglevel", "error",
             "-y",  # Overwrite output file if it exists
             "-f", "rawvideo",
-            "-pix_fmt", "yuv420p",
+            "-pix_fmt", self.PIX_FMT,
             "-r", str(fps),  # Frames per second
             "-s", f"{width}x{height}",  # Specify image size
             "-i", "-",  # Input from pipe
@@ -129,6 +130,7 @@ class FFMPEG_VideoWriter_CPU(VideoWriter):
     SUPPORTED_VIDEO_CODECS = ['h264', 'hevc', 'mjpeg']
     SUPPORTED_PRESETS = ['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
     SUPPORTED_PROFILES = ['main']
+    PIX_FMT = 'yuv420p'
 
     def __init__(
             self, 
@@ -151,7 +153,7 @@ class FFMPEG_VideoWriter_CPU(VideoWriter):
             "-loglevel", "error",
             "-y",  # Overwrite output file if it exists
             "-f", "rawvideo",
-            "-pix_fmt", "yuv420p",
+            "-pix_fmt", self.PIX_FMT,
             "-r", str(fps),  # Frames per second
             "-s", f"{width}x{height}",  # Specify image size
             "-i", "-",  # Input from pipe
@@ -211,78 +213,27 @@ class FFMPEG_VideoWriter_CPU(VideoWriter):
         self.ffmpeg_process.stdin.close()
         self.ffmpeg_process.wait()
 
-class FFMPEG_VideoWriter_CPU_Grayscale(VideoWriter):
-    # To check which encoders are available, use:
-    # ffmpeg -encoders
-    #
-    # To check which profiles and presets are available for a given encoder use:
-    # ffmpeg -h encoder=h264
-    #
-    # This is much faster with grayscale images than converting to color video, but less widely supported
+class FFMPEG_VideoWriter_CPU_Grayscale(FFMPEG_VideoWriter_CPU):
 
     SUPPORTED_VIDEO_CODECS = ['h264']
     SUPPORTED_PRESETS = ['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
     SUPPORTED_PROFILES = ['high']
+    PIX_FMT = 'gray'
 
-    def __init__(
-            self, 
-            height: int, 
-            width: int, 
-            fps: int = 25, 
-            q: int = 23,
-            filename: str = 'output.mp4',
-            codec: str = 'h264',
-            profile: str = 'high',
-            preset: str = 'veryfast'
-        ) -> None:
-
-        if not codec in self.SUPPORTED_VIDEO_CODECS:
-            raise ValueError(f'wrong codec, supported codecs are: {self.SUPPORTED_VIDEO_CODECS}') 
-        
-        ffmpeg_cmd_prefix = [
-            "ffmpeg",
-            "-hide_banner", 
-            "-loglevel", "error",
-            "-y",  # Overwrite output file if it exists
-            "-f", "rawvideo",
-            "-pix_fmt", "gray",
-            "-r", str(fps),  # Frames per second
-            "-s", f"{width}x{height}",  # Specify image size
-            "-i", "-",  # Input from pipe
-            "-c:v", codec 
-        ]
-
-        ffmpeg_cmd_suffix = [filename]
-
-        ffmpeg_cmd_options = []
-
-        if not profile in self.SUPPORTED_PROFILES:
-            raise ValueError(f'wrong profile, supported profile are: {self.SUPPORTED_PROFILES}') 
-
-        if not preset in self.SUPPORTED_PRESETS:
-            raise ValueError(f'wrong preset, supported preset are: {self.SUPPORTED_PRESETS}') 
-
-        if not (-12 <= q <= 51):
-            raise ValueError(f'q should be between -12 and 51, default 23') 
-
-        ffmpeg_cmd_options = [
-            "-profile:v", profile,
-            "-preset", preset, 
-            "-crf", str(q),
-            "-pix_fmt", "gray"
-        ]
-
-        ffmpeg_cmd = ffmpeg_cmd_prefix + ffmpeg_cmd_options + ffmpeg_cmd_suffix
-        self.ffmpeg_process = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
-        
     def write_frame(self, image: NDArray) -> None:
         # requires grayscale images
         if len(image.shape) == 3:
             image = image[:,:,0]
         self.ffmpeg_process.stdin.write(image.tobytes())
 
-    def close(self) -> None:
-        self.ffmpeg_process.stdin.flush()
-        self.ffmpeg_process.stdin.close()
-        self.ffmpeg_process.wait()
-        
+class FFMPEG_VideoWriter_CPU_YUV420P(FFMPEG_VideoWriter_CPU):
+
+    def write_frame(self, image: NDArray) -> None:
+        # requires yuv420p images
+        self.ffmpeg_process.stdin.write(image.tobytes())
+
+class FFMPEG_VideoWriter_GPU_YUV420P(FFMPEG_VideoWriter_GPU):
+
+    def write_frame(self, image: NDArray) -> None:
+        # requires yuv420p images
+        self.ffmpeg_process.stdin.write(image.tobytes())
